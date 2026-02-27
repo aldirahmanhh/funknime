@@ -28,7 +28,13 @@ export default async function AnimeDetailPage({ params }: { params: Promise<{ id
     <div className="mx-auto max-w-3xl px-4 py-8">
       <h1 className="text-2xl font-semibold">{d?.title ?? id}</h1>
       <div className="mt-2 text-sm text-zinc-600">Score: {d?.score ?? "-"} • Episodes: {d?.episodes ?? "-"}</div>
-      <p className="mt-4 text-sm leading-6 text-zinc-800 whitespace-pre-line">{d?.synopsis ?? ""}</p>
+      <div className="mt-4 text-sm leading-6 text-zinc-800 whitespace-pre-line">
+        {typeof d?.synopsis === "string"
+          ? d.synopsis
+          : Array.isArray(d?.synopsis?.paragraphs)
+            ? d.synopsis.paragraphs.join("\n\n")
+            : ""}
+      </div>
 
       {session?.user ? (
         <div className="mt-6 rounded-lg border bg-white p-4">
