@@ -63,10 +63,14 @@ export default async function AnimeDetailPage({ params }: { params: Promise<{ id
         <h2 className="text-lg font-semibold">Episodes</h2>
         <div className="mt-2 grid gap-2">
           {(d?.episodeList ?? []).slice(0, 50).map((e: any) => (
-            <div key={e.episodeId} className="rounded-md border bg-white p-3 text-sm">
+            <a
+              key={e.episodeId}
+              href={`/anime/episode/${encodeURIComponent(e.episodeId)}`}
+              className="block rounded-md border bg-white p-3 text-sm hover:shadow"
+            >
               <div className="font-medium">{e.title}</div>
               <div className="text-xs text-zinc-500">Eps {e.eps} • {e.date}</div>
-            </div>
+            </a>
           ))}
         </div>
       </div>

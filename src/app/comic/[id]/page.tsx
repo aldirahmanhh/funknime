@@ -66,10 +66,14 @@ export default async function ComicDetailPage({ params }: { params: Promise<{ id
         <h2 className="text-lg font-semibold">Chapters</h2>
         <div className="mt-2 grid gap-2">
           {(chapters?.data ?? []).slice(0, 50).map((c: any, idx: number) => (
-            <div key={c?.slug ?? c?.link ?? idx} className="rounded-md border bg-white p-3 text-sm">
+            <a
+              key={c?.slug ?? c?.link ?? idx}
+              href={`/comic/read/${encodeURIComponent(c?.slug ?? "")}?from=${encodeURIComponent(id)}`}
+              className="block rounded-md border bg-white p-3 text-sm hover:shadow"
+            >
               <div className="font-medium">{c?.chapter ?? "Chapter"}</div>
               <div className="text-xs text-zinc-500">{c?.date ?? ""}</div>
-            </div>
+            </a>
           ))}
         </div>
       </div>
