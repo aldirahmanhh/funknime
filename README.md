@@ -30,6 +30,7 @@ Optional auth providers:
 
 Database (required for save progress):
 - `DATABASE_URL`
+- `DIRECT_URL` (recommended; can be same as DATABASE_URL if you only have one URL)
 
 ### 3) Prisma
 ```bash
