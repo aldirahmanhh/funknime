@@ -6,11 +6,11 @@ export default async function Header() {
   const session = await auth();
 
   return (
-    <div className="sticky top-0 z-50 border-b border-zinc-800/60 bg-black/80 backdrop-blur">
-      <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
+    <div className="sticky top-0 z-50 border-b border-border/60 bg-black/60 backdrop-blur">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3">
         <div className="flex items-center gap-4">
-          <Link href="/" className="font-semibold tracking-tight text-white">
-            funknime
+          <Link href="/" className="font-display text-lg font-bold tracking-tight">
+            <span className="gradient-text">funknime</span>
           </Link>
           <nav className="hidden items-center gap-3 text-sm text-zinc-300 sm:flex">
             <Link className="hover:text-white" href="/anime">
@@ -26,13 +26,13 @@ export default async function Header() {
           <ThemeToggle />
           {session?.user ? (
             <form action="/api/auth/signout" method="post">
-              <button className="rounded-md border border-zinc-700/60 px-3 py-1 text-xs text-zinc-100 hover:bg-zinc-900">
+              <button className="rounded-md border border-border/60 px-3 py-1 text-xs text-zinc-100 hover:bg-black/30">
                 Sign out
               </button>
             </form>
           ) : (
             <form action="/api/auth/signin" method="post">
-              <button className="rounded-md border border-zinc-700/60 px-3 py-1 text-xs text-zinc-100 hover:bg-zinc-900">
+              <button className="gradient-btn rounded-md px-3 py-1 text-xs font-semibold text-black hover:opacity-90">
                 Sign in
               </button>
             </form>
