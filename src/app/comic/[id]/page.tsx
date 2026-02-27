@@ -1,0 +1,70 @@
+import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
+
+async function getComic(id: string) {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL ?? ""}/api/comic/comic/${encodeURIComponent(id)}`, {
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error("Failed to load comic detail");
+  return res.json();
+}
+
+async function getChapters(id: string) {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL ?? ""}/api/comic/chapter/${encodeURIComponent(id)}`, {
+    cache: "no-store",
+  });
+  if (!res.ok) throw new Error("Failed to load comic chapters");
+  return res.json();
+}
+
+export default async function ComicDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+
+  const [detail, chapters] = await Promise.all([getComic(id), getChapters(id)]);
+
+  const session = await auth();
+  const progress = session?.user?.email
+    ? await prisma.comicProgress.findFirst({
+        where: { user: { email: session.user.email }, comicId: id },
+      })
+    : null;
+
+  return (
+    <div className="mx-auto max-w-3xl px-4 py-8">
+      <h1 className="text-2xl font-semibold">{detail?.data?.title ?? id}</h1>
+
+      {session?.user ? (
+        <div className="mt-6 rounded-lg border bg-white p-4">
+          <div className="text-sm font-semibold">Saved progress</div>
+          <div className="mt-1 text-sm text-zinc-600">
+            {progress?.chapterTitle ? `Last read: ${progress.chapterTitle}` : "No saved chapter yet."}
+          </div>
+          <form className="mt-3 flex gap-2" action={`/api/progress/comic`} method="post">
+            <input type="hidden" name="comicId" value={id} />
+            <input
+              name="chapterTitle"
+              placeholder="Chapter title"
+              className="w-full rounded-md border px-3 py-2 text-sm"
+            />
+            <button className="rounded-md bg-black px-3 py-2 text-sm text-white">Save</button>
+          </form>
+        </div>
+      ) : (
+        <div className="mt-6 rounded-lg border bg-white p-4 text-sm">
+          Sign in untuk menyimpan progress bacaan.
+        </div>
+      )}
+
+      <div className="mt-8">
+        <h2 className="text-lg font-semibold">Chapters</h2>
+        <div className="mt-2 grid gap-2">
+          {(chapters?.data ?? chapters?.chapterList ?? []).slice(0, 50).map((c: any, idx: number) => (
+            <div key={c?.href ?? idx} className="rounded-md border bg-white p-3 text-sm">
+              <div className="font-medium">{c?.title ?? c?.chapter ?? c?.name ?? "Chapter"}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
