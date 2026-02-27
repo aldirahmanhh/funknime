@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { getBaseUrl } from "@/lib/baseUrl";
 
@@ -57,7 +56,14 @@ export default async function ComicReadPage({
           <div key={src} className="overflow-hidden rounded-lg border border-zinc-800 bg-black">
             <div className="relative w-full bg-black">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={src} alt={`Page ${i + 1}`} className="h-auto w-full object-contain" loading={i < 3 ? "eager" : "lazy"} />
+              <img
+                src={src}
+                alt={`Page ${i + 1}`}
+                className="h-auto w-full object-contain"
+                loading={i < 4 ? "eager" : "lazy"}
+                decoding="async"
+                fetchPriority={i < 2 ? "high" : "auto"}
+              />
             </div>
           </div>
         ))}
