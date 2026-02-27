@@ -40,46 +40,45 @@ export default async function ComicReadPage({
         ) : null}
       </div>
 
-      <div className="mt-4 flex items-center justify-between rounded-md border bg-white p-3 text-sm">
-        <Link
-          className={`underline ${idx <= 0 ? "pointer-events-none text-zinc-300" : ""}`}
-          href={`/comic/read/${encodeURIComponent(slug)}?page=${idx}&from=${encodeURIComponent(from ?? "")}`}
-        >
-          Prev
-        </Link>
-        <div>
-          Page {idx + 1} / {images.length}
-        </div>
-        <Link
-          className={`underline ${idx >= images.length - 1 ? "pointer-events-none text-zinc-300" : ""}`}
-          href={`/comic/read/${encodeURIComponent(slug)}?page=${idx + 2}&from=${encodeURIComponent(from ?? "")}`}
-        >
-          Next
-        </Link>
-      </div>
-
-      <div className="mt-4 overflow-hidden rounded-lg border bg-black">
-        {current ? (
-          <div className="relative aspect-[3/4] w-full bg-black">
-            {/* Use plain img to avoid remote image config for MVP */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={current} alt={`Page ${idx + 1}`} className="h-full w-full object-contain" />
-          </div>
+      <div className="mt-4 flex items-center justify-between rounded-md border border-zinc-800 bg-zinc-950/40 p-3 text-sm">
+        {from ? (
+          <Link className="underline text-zinc-200" href={`/comic/${encodeURIComponent(from)}`}>
+            Back
+          </Link>
         ) : (
-          <div className="p-6 text-sm text-white">No image found.</div>
+          <span />
         )}
+        <div className="text-zinc-300">{chapter?.chapter_title ?? slug}</div>
+        <div className="text-zinc-400">{images.length} pages</div>
       </div>
 
-      <div className="mt-4 flex items-center justify-between text-sm">
+      <div className="mt-4 grid gap-3">
+        {images.map((src, i) => (
+          <div key={src} className="overflow-hidden rounded-lg border border-zinc-800 bg-black">
+            <div className="relative w-full bg-black">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={src} alt={`Page ${i + 1}`} className="h-auto w-full object-contain" loading={i < 3 ? "eager" : "lazy"} />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-6 flex items-center justify-between text-sm">
         {nav?.previousChapter ? (
-          <Link className="underline" href={`/comic/read/${encodeURIComponent(nav.previousChapter)}?page=1&from=${encodeURIComponent(from ?? "")}`}>
+          <Link
+            className="rounded-md border border-zinc-800 px-3 py-2 text-zinc-100 hover:bg-zinc-900"
+            href={`/comic/read/${encodeURIComponent(nav.previousChapter)}?from=${encodeURIComponent(from ?? "")}`}
+          >
             Prev Chapter
           </Link>
         ) : (
           <span />
         )}
         {nav?.nextChapter ? (
-          <Link className="underline" href={`/comic/read/${encodeURIComponent(nav.nextChapter)}?page=1&from=${encodeURIComponent(from ?? "")}`}>
+          <Link
+            className="rounded-md bg-orange-500 px-3 py-2 font-semibold text-black hover:bg-orange-400"
+            href={`/comic/read/${encodeURIComponent(nav.nextChapter)}?from=${encodeURIComponent(from ?? "")}`}
+          >
             Next Chapter
           </Link>
         ) : (
