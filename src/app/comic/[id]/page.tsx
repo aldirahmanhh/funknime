@@ -24,7 +24,10 @@ async function getChapters(id: string) {
 export default async function ComicDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
-  const [detail, chapters] = await Promise.all([getComic(id), getChapters(id)]);
+  const detail = await getComic(id);
+  // Upstream comic detail already includes chapters[] reliably.
+  // The separate /comic/comic/chapter/{id} endpoint is inconsistent (may 403/502).
+  const chapters = { data: detail?.chapters ?? [] };
 
   const session = await auth();
   const progress = session?.user?.email
@@ -62,9 +65,10 @@ export default async function ComicDetailPage({ params }: { params: Promise<{ id
       <div className="mt-8">
         <h2 className="text-lg font-semibold">Chapters</h2>
         <div className="mt-2 grid gap-2">
-          {(chapters?.data ?? chapters?.chapterList ?? []).slice(0, 50).map((c: any, idx: number) => (
-            <div key={c?.href ?? idx} className="rounded-md border bg-white p-3 text-sm">
-              <div className="font-medium">{c?.title ?? c?.chapter ?? c?.name ?? "Chapter"}</div>
+          {(chapters?.data ?? []).slice(0, 50).map((c: any, idx: number) => (
+            <div key={c?.slug ?? c?.link ?? idx} className="rounded-md border bg-white p-3 text-sm">
+              <div className="font-medium">{c?.chapter ?? "Chapter"}</div>
+              <div className="text-xs text-zinc-500">{c?.date ?? ""}</div>
             </div>
           ))}
         </div>
