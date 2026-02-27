@@ -13,7 +13,11 @@ async function getHomepage() {
 
 export default async function ComicPage() {
   const data = await getHomepage();
-  const latest = data?.latest ?? [];
+  // Filter out non-comic items (e.g. /plus) that break the detail route.
+  const latest = (data?.latest ?? []).filter((c: any) => {
+    const link = String(c?.link ?? "");
+    return link.startsWith("/manga/");
+  });
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
