@@ -1,8 +1,11 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
+import { getBaseUrl } from "@/lib/baseUrl";
+
 async function getComic(id: string) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL ?? ""}/api/comic/comic/${encodeURIComponent(id)}`, {
+  const base = await getBaseUrl();
+  const res = await fetch(`${base}/api/comic/comic/${encodeURIComponent(id)}`, {
     cache: "no-store",
   });
   if (!res.ok) throw new Error("Failed to load comic detail");
@@ -10,7 +13,8 @@ async function getComic(id: string) {
 }
 
 async function getChapters(id: string) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL ?? ""}/api/comic/chapter/${encodeURIComponent(id)}`, {
+  const base = await getBaseUrl();
+  const res = await fetch(`${base}/api/comic/chapter/${encodeURIComponent(id)}`, {
     cache: "no-store",
   });
   if (!res.ok) throw new Error("Failed to load comic chapters");

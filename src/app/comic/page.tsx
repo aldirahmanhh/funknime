@@ -1,7 +1,10 @@
 import Link from "next/link";
 
+import { getBaseUrl } from "@/lib/baseUrl";
+
 async function getHomepage() {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL ?? ""}/api/comic/homepage`, {
+  const base = await getBaseUrl();
+  const res = await fetch(`${base}/api/comic/homepage`, {
     cache: "no-store",
   });
   if (!res.ok) throw new Error("Failed to load comic homepage");

@@ -1,8 +1,11 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 
+import { getBaseUrl } from "@/lib/baseUrl";
+
 async function getDetail(id: string) {
-  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL ?? ""}/api/anime/anime/${encodeURIComponent(id)}`, {
+  const base = await getBaseUrl();
+  const res = await fetch(`${base}/api/anime/anime/${encodeURIComponent(id)}`, {
     cache: "no-store",
   });
   if (!res.ok) throw new Error("Failed to load anime detail");
