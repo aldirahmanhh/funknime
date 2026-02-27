@@ -62,7 +62,7 @@ export default async function ComicReadPage({
         {current ? (
           <div className="relative aspect-[3/4] w-full bg-black">
             {/* Use plain img to avoid remote image config for MVP */}
-            // eslint-disable-next-line @next/next/no-img-element
+            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={current} alt={`Page ${idx + 1}`} className="h-full w-full object-contain" />
           </div>
         ) : (
