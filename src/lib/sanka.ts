@@ -16,13 +16,22 @@ export function cacheControlHeader({ sMaxage = 60, swr = 300 }: FetchJsonOptions
 }
 
 export async function upstreamGet(url: string, init?: RequestInit) {
-  const res = await fetch(url, {
-    ...init,
-    headers: {
-      Accept: "application/json",
-      ...(init?.headers ?? {}),
-    },
-  });
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 15000);
+
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      ...init,
+      signal: controller.signal,
+      headers: {
+        Accept: "application/json",
+        ...(init?.headers ?? {}),
+      },
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
 
   const text = await res.text();
   let json: any;
