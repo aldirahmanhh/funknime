@@ -26,9 +26,12 @@ export function RowSection({
         </Link>
       </div>
 
-      <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
+      {/* Mobile: horizontal swipe row. Desktop: grid. */}
+      <div className="mt-4 -mx-4 flex gap-4 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:overflow-visible sm:px-0 sm:pb-0 sm:grid-cols-3 lg:grid-cols-6">
         {items.map((it) => (
-          <MediaCard key={it.href} title={it.title} subtitle={it.subtitle} image={it.image} href={it.href} />
+          <div key={it.href} className="min-w-[160px] sm:min-w-0">
+            <MediaCard title={it.title} subtitle={it.subtitle} image={it.image} href={it.href} />
+          </div>
         ))}
       </div>
     </section>

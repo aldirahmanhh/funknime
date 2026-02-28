@@ -137,7 +137,7 @@ export default async function Home() {
           </div>
         </div>
 
-        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {(schedule?.data ?? []).map((d: any) => (
             <div key={d.day} className="rounded-xl border border-border/60 bg-black/20 p-4">
               <div className="flex items-center justify-between">
