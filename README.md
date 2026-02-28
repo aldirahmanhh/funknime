@@ -1,12 +1,30 @@
-# Anime & Comic Web (MVP)
+# funknime
 
-Next.js app (App Router + TypeScript + Tailwind) that consumes **Sanka API**:
+Modern **Anime + Comic** web app built with **Next.js (App Router) + TypeScript + Tailwind**.
+
+Upstream APIs (Sanka):
 - Anime: https://www.sankavollerei.com/anime/
 - Comic: https://www.sankavollerei.com/comic
 
+## Features
+- Modern zumnime-style UI (dark/light)
+- Home sections (anime + comic) via cached server proxies
+- Anime:
+  - Home + schedule
+  - Browse A–Z (unlimited)
+  - Search
+  - Detail + episode player with **quality/server dropdown**
+- Comic:
+  - Homepage + trending/popular/latest/recommendations/random
+  - Detail + long-scroll reader
+- Auth (NextAuth) + progress saving:
+  - Save last watched episode
+  - Save last read chapter
+
 ## Key design
 - Browser never calls upstream directly.
-- All upstream calls go through Next.js Route Handlers (`/api/anime/*`, `/api/comic/*`) with CDN cache headers to reduce upstream hits (rate limit safe).
+- All upstream calls go through Next.js Route Handlers (`/api/anime/*`, `/api/comic/*`) with `Cache-Control` to reduce upstream hits (rate limit safe).
+- Some upstream endpoints contain ads like `/plus/` → filtered in UI.
 
 ## Setup (local)
 
@@ -37,6 +55,15 @@ Database (required for save progress):
 npx prisma generate
 npx prisma migrate dev
 ```
+
+## Important: Rate limit
+Upstream rate limit: **70 requests/minute**.
+
+This project mitigates it by:
+- CDN caching headers in `/api/*` routes
+- avoiding direct browser → upstream calls
+
+Don’t spam the upstream.
 
 ### 4) Run
 ```bash
