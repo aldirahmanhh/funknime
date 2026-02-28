@@ -64,13 +64,13 @@ export default async function Home() {
               </Link>
             ) : null}
             <Link
-              className="rounded-md border border-border/60 bg-black/20 px-4 py-2 text-sm text-zinc-100 hover:bg-black/30"
+              className="rounded-md border border-border/60 bg-card/60 px-4 py-2 text-sm text-foreground hover:bg-card"
               href="/anime"
             >
               Browse Anime
             </Link>
             <Link
-              className="rounded-md border border-border/60 bg-black/20 px-4 py-2 text-sm text-zinc-100 hover:bg-black/30"
+              className="rounded-md border border-border/60 bg-card/60 px-4 py-2 text-sm text-foreground hover:bg-card"
               href="/comic"
             >
               Browse Comic
@@ -82,10 +82,10 @@ export default async function Home() {
       <section className="mt-6 grid gap-3 rounded-2xl border border-border/60 bg-card/40 p-6">
         <h2 className="text-sm font-semibold text-zinc-200">Quick links</h2>
         <div className="flex flex-wrap gap-2 text-sm">
-          <Link className="rounded-md border border-border/60 bg-black/20 px-3 py-1 hover:bg-black/30" href="/anime">
+          <Link className="rounded-md border border-border/60 bg-card/60 px-3 py-1 hover:bg-card" href="/anime">
             Browse Anime (A–Z)
           </Link>
-          <Link className="rounded-md border border-border/60 bg-black/20 px-3 py-1 hover:bg-black/30" href="/comic">
+          <Link className="rounded-md border border-border/60 bg-card/60 px-3 py-1 hover:bg-card" href="/comic">
             Browse Comic
           </Link>
         </div>
@@ -139,7 +139,7 @@ export default async function Home() {
 
         <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {(schedule?.data ?? []).map((d: any) => (
-            <div key={d.day} className="rounded-xl border border-border/60 bg-black/20 p-4">
+            <div key={d.day} className="rounded-xl border border-border/60 bg-card/60 p-4">
               <div className="flex items-center justify-between">
                 <div className="font-display font-semibold tracking-tight">{d.day}</div>
                 <div className="text-xs text-zinc-400">{d.anime_list?.length ?? 0} anime</div>
@@ -149,9 +149,9 @@ export default async function Home() {
                   <Link
                     key={a.slug}
                     href={`/anime/${encodeURIComponent(a.slug)}`}
-                    className="group flex items-center gap-3 rounded-lg border border-border/40 bg-black/10 p-2 hover:bg-black/20"
+                    className="group flex items-center gap-3 rounded-lg border border-border/40 bg-card/40 p-2 hover:bg-card/60"
                   >
-                    <div className="h-10 w-10 overflow-hidden rounded-md bg-black/30">
+                    <div className="h-10 w-10 overflow-hidden rounded-md bg-muted/60">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={a.poster} alt={a.title} className="h-full w-full object-cover" loading="lazy" />
                     </div>

@@ -26,7 +26,7 @@ export default async function Header() {
           <ThemeToggle />
           {session?.user ? (
             <form action="/api/auth/signout" method="post">
-              <button className="rounded-md border border-border/60 px-3 py-1 text-xs text-zinc-100 hover:bg-black/30">
+              <button className="rounded-md border border-border/60 bg-card/60 px-3 py-1 text-xs text-foreground hover:bg-card">
                 Sign out
               </button>
             </form>

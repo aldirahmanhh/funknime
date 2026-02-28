@@ -38,7 +38,7 @@ export default async function AnimeSearchPage({
         <input
           name="q"
           defaultValue={query}
-          className="w-full rounded-md border border-border/60 bg-black/20 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-500 outline-none"
+          className="w-full rounded-md border border-border/60 bg-card/60 px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none"
           placeholder="boruto"
         />
         <button className="gradient-btn rounded-md px-4 py-2 text-sm font-semibold text-black hover:opacity-90">

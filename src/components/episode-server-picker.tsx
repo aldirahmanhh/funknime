@@ -28,10 +28,10 @@ export function EpisodeServerPicker({ qualities }: { qualities: QualityOption[] 
 
   return (
     <div className="mt-4 flex flex-wrap items-center gap-2 text-sm">
-      <div className="rounded-md border border-border/60 bg-black/20 px-3 py-2">
-        <label className="mr-2 text-xs text-zinc-400">Quality</label>
+      <div className="rounded-md border border-border/60 bg-card/60 px-3 py-2">
+        <label className="mr-2 text-xs text-muted-foreground">Quality</label>
         <select
-          className="bg-transparent text-zinc-100 outline-none"
+          className="bg-transparent text-foreground outline-none"
           value={Math.min(Math.max(0, qIdx), Math.max(0, qualities.length - 1))}
           onChange={(e) => set(Number(e.target.value), 0)}
         >
@@ -43,10 +43,10 @@ export function EpisodeServerPicker({ qualities }: { qualities: QualityOption[] 
         </select>
       </div>
 
-      <div className="rounded-md border border-border/60 bg-black/20 px-3 py-2">
-        <label className="mr-2 text-xs text-zinc-400">Server</label>
+      <div className="rounded-md border border-border/60 bg-card/60 px-3 py-2">
+        <label className="mr-2 text-xs text-muted-foreground">Server</label>
         <select
-          className="bg-transparent text-zinc-100 outline-none"
+          className="bg-transparent text-foreground outline-none"
           value={Math.min(Math.max(0, sIdx), Math.max(0, servers.length - 1))}
           onChange={(e) => set(qIdx, Number(e.target.value))}
         >
@@ -58,7 +58,7 @@ export function EpisodeServerPicker({ qualities }: { qualities: QualityOption[] 
         </select>
       </div>
 
-      <div className="text-xs text-zinc-400">
+      <div className="text-xs text-muted-foreground">
         Tips: kalau server A banyak iklan, ganti ke filedon/mega.
       </div>
     </div>

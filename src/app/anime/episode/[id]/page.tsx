@@ -48,7 +48,7 @@ export default async function EpisodePage({
       <EpisodeServerPicker qualities={qualities} />
 
       {embedUrl ? (
-        <div className="mt-6 aspect-video w-full overflow-hidden rounded-lg border bg-black">
+        <div className="mt-6 aspect-video w-full overflow-hidden rounded-lg border border-border/60 bg-card/60">
           <iframe
             src={embedUrl}
             className="h-full w-full"

@@ -50,7 +50,7 @@ export default async function AnimeDetailPage({ params }: { params: Promise<{ id
               placeholder="Episode number (e.g. 3)"
               className="w-48 rounded-md border px-3 py-2 text-sm"
             />
-            <button className="rounded-md bg-black px-3 py-2 text-sm text-white">Save</button>
+            <button className="gradient-btn rounded-md px-3 py-2 text-sm font-semibold text-black hover:opacity-90">Save</button>
           </form>
         </div>
       ) : (

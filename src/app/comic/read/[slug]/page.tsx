@@ -39,7 +39,7 @@ export default async function ComicReadPage({
         ) : null}
       </div>
 
-      <div className="mt-4 flex items-center justify-between rounded-md border border-zinc-800 bg-zinc-950/40 p-3 text-sm">
+      <div className="mt-4 flex items-center justify-between rounded-md border border-border/60 bg-card/40 p-3 text-sm">
         {from ? (
           <Link className="underline text-zinc-200" href={`/comic/${encodeURIComponent(from)}`}>
             Back
@@ -53,8 +53,8 @@ export default async function ComicReadPage({
 
       <div className="mt-4 grid gap-3">
         {images.map((src, i) => (
-          <div key={src} className="overflow-hidden rounded-lg border border-zinc-800 bg-black">
-            <div className="relative w-full bg-black">
+          <div key={src} className="overflow-hidden rounded-lg border border-border/60 bg-card/60">
+            <div className="relative w-full bg-card/60">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={src}
@@ -72,7 +72,7 @@ export default async function ComicReadPage({
       <div className="mt-6 flex items-center justify-between text-sm">
         {nav?.previousChapter ? (
           <Link
-            className="rounded-md border border-zinc-800 px-3 py-2 text-zinc-100 hover:bg-zinc-900"
+            className="rounded-md border border-border/60 bg-card/60 px-3 py-2 text-foreground hover:bg-card"
             href={`/comic/read/${encodeURIComponent(nav.previousChapter)}?from=${encodeURIComponent(from ?? "")}`}
           >
             Prev Chapter

@@ -53,7 +53,7 @@ export default async function ComicDetailPage({ params }: { params: Promise<{ id
               placeholder="Chapter title"
               className="w-full rounded-md border px-3 py-2 text-sm"
             />
-            <button className="rounded-md bg-black px-3 py-2 text-sm text-white">Save</button>
+            <button className="gradient-btn rounded-md px-3 py-2 text-sm font-semibold text-black hover:opacity-90">Save</button>
           </form>
         </div>
       ) : (

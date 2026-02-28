@@ -34,7 +34,7 @@ export default async function AnimePage() {
                 <Link
                   key={a.animeId}
                   href={`/anime/${encodeURIComponent(a.animeId)}`}
-                  className="rounded-lg border border-border/40 bg-black/10 px-3 py-2 text-sm text-zinc-100 hover:bg-black/20"
+                  className="rounded-lg border border-border/40 bg-card/40 px-3 py-2 text-sm text-foreground hover:bg-card/60"
                 >
                   <div className="line-clamp-1 font-medium">{a.title}</div>
                 </Link>
