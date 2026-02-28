@@ -21,8 +21,15 @@ function pickRandom<T>(arr: T[], n: number) {
 }
 
 export function HeroCarousel({ items }: { items: HeroItem[] }) {
-  const list = useMemo(() => pickRandom(items, Math.min(6, items.length)), [items]);
+  // Avoid hydration mismatch: pick a deterministic subset on first render.
+  // Then randomize on client after mount.
+  const baseList = useMemo(() => items.slice(0, Math.min(6, items.length)), [items]);
+  const [list, setList] = useState<HeroItem[]>(baseList);
   const [idx, setIdx] = useState(0);
+
+  useEffect(() => {
+    setList(pickRandom(items, Math.min(6, items.length)));
+  }, [items]);
 
   useEffect(() => {
     if (list.length <= 1) return;
