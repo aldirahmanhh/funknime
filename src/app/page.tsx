@@ -8,8 +8,15 @@ async function getAnimeHome() {
   return res.json();
 }
 
+async function getSchedule() {
+  const base = await getBaseUrl();
+  const res = await fetch(`${base}/api/anime/schedule`, { cache: "no-store" });
+  if (!res.ok) return null;
+  return res.json();
+}
+
 export default async function Home() {
-  const home = await getAnimeHome();
+  const [home, schedule] = await Promise.all([getAnimeHome(), getSchedule()]);
   const hero = home?.data?.ongoing?.animeList?.[0];
 
   return (
@@ -70,6 +77,44 @@ export default async function Home() {
           <Link className="rounded-md border border-border/60 bg-black/20 px-3 py-1 hover:bg-black/30" href="/comic">
             Latest Comic
           </Link>
+        </div>
+      </section>
+
+      <section className="mt-6 rounded-2xl border border-border/60 bg-card/40 p-6">
+        <div className="flex items-end justify-between gap-4">
+          <div>
+            <h2 className="font-display text-xl font-bold tracking-tight">Schedule</h2>
+            <p className="mt-1 text-sm text-zinc-400">Rilis anime berdasarkan hari</p>
+          </div>
+        </div>
+
+        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {(schedule?.data ?? []).map((d: any) => (
+            <div key={d.day} className="rounded-xl border border-border/60 bg-black/20 p-4">
+              <div className="flex items-center justify-between">
+                <div className="font-display font-semibold tracking-tight">{d.day}</div>
+                <div className="text-xs text-zinc-400">{d.anime_list?.length ?? 0} anime</div>
+              </div>
+              <div className="mt-3 grid gap-2">
+                {(d.anime_list ?? []).slice(0, 6).map((a: any) => (
+                  <Link
+                    key={a.slug}
+                    href={`/anime/${encodeURIComponent(a.slug)}`}
+                    className="group flex items-center gap-3 rounded-lg border border-border/40 bg-black/10 p-2 hover:bg-black/20"
+                  >
+                    <div className="h-10 w-10 overflow-hidden rounded-md bg-black/30">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={a.poster} alt={a.title} className="h-full w-full object-cover" loading="lazy" />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="line-clamp-1 text-sm text-zinc-100 group-hover:text-white">{a.title}</div>
+                      <div className="text-xs text-zinc-500">{a.slug}</div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       </section>
     </div>
