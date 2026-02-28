@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getBaseUrl } from "@/lib/baseUrl";
 import { HomeSearch } from "@/components/home-search";
+import { RowSection } from "@/components/row-section";
 
 async function getAnimeHome() {
   const base = await getBaseUrl();
@@ -17,7 +18,12 @@ async function getSchedule() {
 }
 
 export default async function Home() {
-  const [home, schedule] = await Promise.all([getAnimeHome(), getSchedule()]);
+  const [home, schedule, unlimited] = await Promise.all([getAnimeHome(), getSchedule(), (async () => {
+    const base = await getBaseUrl();
+    const res = await fetch(`${base}/api/anime/unlimited`, { cache: "no-store" });
+    if (!res.ok) return null;
+    return res.json();
+  })()]);
   const hero = home?.data?.ongoing?.animeList?.[0];
 
   return (
@@ -77,13 +83,51 @@ export default async function Home() {
         <h2 className="text-sm font-semibold text-zinc-200">Quick links</h2>
         <div className="flex flex-wrap gap-2 text-sm">
           <Link className="rounded-md border border-border/60 bg-black/20 px-3 py-1 hover:bg-black/30" href="/anime">
-            Ongoing Anime
+            Browse Anime (A–Z)
           </Link>
           <Link className="rounded-md border border-border/60 bg-black/20 px-3 py-1 hover:bg-black/30" href="/comic">
-            Latest Comic
+            Browse Comic
           </Link>
         </div>
       </section>
+
+      <RowSection
+        title="Ongoing"
+        viewMoreHref="/anime"
+        items={(home?.data?.ongoing?.animeList ?? []).slice(0, 12).map((a: any) => ({
+          title: a.title,
+          subtitle: `Ep ${a.episodes} • ${a.releaseDay}`,
+          image: a.poster,
+          href: `/anime/${encodeURIComponent(a.animeId)}`,
+        }))}
+      />
+
+      <RowSection
+        title="Completed"
+        viewMoreHref="/anime"
+        items={(home?.data?.completed?.animeList ?? []).slice(0, 12).map((a: any) => ({
+          title: a.title,
+          subtitle: `${a.episodes ?? "-"} eps • score ${a.score ?? "-"}`,
+          image: a.poster,
+          href: `/anime/${encodeURIComponent(a.animeId)}`,
+        }))}
+      />
+
+      <RowSection
+        title="Unlimited (A–Z)"
+        viewMoreHref="/anime"
+        items={(() => {
+          const list = unlimited?.data?.list ?? [];
+          const firstLetter = list.find((g: any) => g.startWith === "A") ?? list[0];
+          const items = (firstLetter?.animeList ?? []).slice(0, 12);
+          return items.map((a: any) => ({
+            title: a.title,
+            subtitle: firstLetter?.startWith ?? "",
+            image: undefined,
+            href: `/anime/${encodeURIComponent(a.animeId)}`,
+          }));
+        })()}
+      />
 
       <section className="mt-6 rounded-2xl border border-border/60 bg-card/40 p-6">
         <div className="flex items-end justify-between gap-4">
