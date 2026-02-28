@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getBaseUrl } from "@/lib/baseUrl";
+import { HomeSearch } from "@/components/home-search";
 
 async function getAnimeHome() {
   const base = await getBaseUrl();
@@ -42,6 +43,10 @@ export default async function Home() {
           <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-200">
             Streaming & baca komik. Semua request lewat proxy cache biar aman dari rate limit.
           </p>
+
+          <div className="mt-5">
+            <HomeSearch />
+          </div>
 
           <div className="mt-6 flex flex-wrap gap-3">
             {hero?.animeId ? (
