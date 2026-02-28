@@ -1,4 +1,5 @@
 import { getBaseUrl } from "@/lib/baseUrl";
+import { EpisodeServerPicker } from "@/components/episode-server-picker";
 
 async function getEpisode(id: string) {
   const base = await getBaseUrl();
@@ -14,20 +15,37 @@ async function getServerUrl(serverId: string) {
   return res.json();
 }
 
-export default async function EpisodePage({ params }: { params: Promise<{ id: string }> }) {
+export default async function EpisodePage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ q?: string; s?: string }>;
+}) {
   const { id } = await params;
+  const { q = "0", s = "0" } = await searchParams;
+
+  const qIdx = Math.max(0, Number(q) || 0);
+  const sIdx = Math.max(0, Number(s) || 0);
+
   const ep = await getEpisode(id);
   const d = ep?.data;
 
-  // pick first available serverId from first quality
-  const serverId = d?.server?.qualities?.[0]?.serverList?.[0]?.serverId as string | undefined;
+  const qualities = (d?.server?.qualities ?? []).map((qq: any) => ({
+    title: qq.title,
+    servers: (qq.serverList ?? []).map((ss: any) => ({ title: ss.title, serverId: ss.serverId })),
+  }));
+
+  const serverId = qualities?.[qIdx]?.servers?.[sIdx]?.serverId ?? qualities?.[0]?.servers?.[0]?.serverId;
   const embed = serverId ? await getServerUrl(serverId) : null;
   const embedUrl = embed?.data?.url ?? d?.defaultStreamingUrl;
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8">
-      <h1 className="text-xl font-semibold">{d?.title ?? id}</h1>
-      <p className="mt-1 text-sm text-zinc-600">Embed player (best-effort) • Source: sankavollerei</p>
+      <h1 className="font-display text-2xl font-bold tracking-tight">{d?.title ?? id}</h1>
+      <p className="mt-1 text-sm text-zinc-400">Embed player (best-effort) • Source: sankavollerei</p>
+
+      <EpisodeServerPicker qualities={qualities} />
 
       {embedUrl ? (
         <div className="mt-6 aspect-video w-full overflow-hidden rounded-lg border bg-black">
