@@ -14,9 +14,9 @@ export function MediaCard({
   return (
     <Link
       href={href}
-      className="group overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950/40 hover:bg-zinc-900/40"
+      className="group overflow-hidden rounded-xl border border-border/60 bg-card/70 hover:bg-card"
     >
-      <div className="aspect-[3/4] w-full overflow-hidden bg-zinc-900">
+      <div className="aspect-[3/4] w-full overflow-hidden bg-muted">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={image || "https://placehold.co/600x800/18181b/f4f4f5?text=No+Poster"}
@@ -26,8 +26,8 @@ export function MediaCard({
         />
       </div>
       <div className="p-3">
-        <div className="line-clamp-2 text-sm font-semibold text-zinc-100">{title}</div>
-        {subtitle ? <div className="mt-1 text-xs text-zinc-400">{subtitle}</div> : null}
+        <div className="line-clamp-2 text-sm font-semibold text-foreground">{title}</div>
+        {subtitle ? <div className="mt-1 text-xs text-muted-foreground">{subtitle}</div> : null}
       </div>
     </Link>
   );

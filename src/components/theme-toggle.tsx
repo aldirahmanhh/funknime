@@ -13,7 +13,7 @@ export function ThemeToggle() {
   if (!mounted) {
     return (
       <button
-        className="rounded-md border border-zinc-700/60 bg-zinc-900 px-3 py-1 text-xs text-zinc-100"
+        className="rounded-md border border-border/60 bg-card/60 px-3 py-1 text-xs text-foreground"
         type="button"
         aria-label="Toggle theme"
       >
@@ -26,7 +26,7 @@ export function ThemeToggle() {
 
   return (
     <button
-      className="rounded-md border border-zinc-700/60 bg-zinc-900 px-3 py-1 text-xs text-zinc-100 hover:bg-zinc-800"
+      className="rounded-md border border-border/60 bg-card/60 px-3 py-1 text-xs text-foreground hover:bg-card"
       onClick={() => setTheme(isDark ? "light" : "dark")}
       type="button"
     >

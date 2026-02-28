@@ -34,7 +34,7 @@ export function HomeSearch() {
           value={q}
           onChange={(e) => setQ(e.target.value)}
           placeholder="anime / comic..."
-          className="w-full bg-transparent text-sm text-zinc-100 placeholder:text-zinc-500 outline-none"
+          className="w-full bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
         />
       </div>
 
@@ -47,9 +47,9 @@ export function HomeSearch() {
               className="flex items-center justify-between gap-3 px-3 py-2 text-sm hover:bg-black/20"
             >
               <div className="min-w-0">
-                <div className="line-clamp-1 text-zinc-100">{s.title}</div>
+                <div className="line-clamp-1 text-foreground">{s.title}</div>
               </div>
-              <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${s.type === "anime" ? "bg-black/30 text-zinc-200" : "bg-black/30 text-zinc-200"}`}>
+              <span className={`rounded-full border border-border/60 bg-muted/50 px-2 py-0.5 text-[10px] font-semibold text-foreground`}>
                 {s.type}
               </span>
             </Link>
