@@ -123,7 +123,8 @@ export default async function Home() {
           return items.map((a: any) => ({
             title: a.title,
             subtitle: firstLetter?.startWith ?? "",
-            image: undefined,
+            // unlimited endpoint doesn't provide posters; use a placeholder so cards don't look broken
+            image: "https://placehold.co/600x800/18181b/f4f4f5?text=A-Z",
             href: `/anime/${encodeURIComponent(a.animeId)}`,
           }));
         })()}
