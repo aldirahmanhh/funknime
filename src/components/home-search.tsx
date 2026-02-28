@@ -19,7 +19,7 @@ export function HomeSearch() {
     if (!query) return [];
 
     const items: Result[] = [
-      { type: "anime", title: `Search anime: ${q}`, href: `/anime?search=${encodeURIComponent(q)}` },
+      { type: "anime", title: `Search anime: ${q}`, href: `/anime/search?q=${encodeURIComponent(q)}` },
       { type: "comic", title: `Search comic: ${q}`, href: `/comic/search?q=${encodeURIComponent(q)}` },
     ];
 
