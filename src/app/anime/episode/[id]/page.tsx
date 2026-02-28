@@ -34,7 +34,9 @@ export default async function EpisodePage({ params }: { params: Promise<{ id: st
           <iframe
             src={embedUrl}
             className="h-full w-full"
-            allow="autoplay; fullscreen"
+            allow="autoplay; fullscreen; picture-in-picture"
+            // Reduce pop-under / redirect behavior from embed providers
+            sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
             referrerPolicy="no-referrer"
           />
         </div>
