@@ -14,6 +14,20 @@ function normalizeComicLink(link: string) {
   return link.replace(/^\/manga\//, "").replace(/\/$/, "");
 }
 
+function resolveComicImageUrl(raw: string) {
+  const s = String(raw ?? "").trim();
+  if (!s) return undefined;
+
+  // Upstream sometimes returns absolute URLs (e.g. https://thumbnail.komiku.org/...) as well as
+  // root-relative paths on sankavollerei.com (e.g. /asset/img/...).
+  if (s.startsWith("http://") || s.startsWith("https://")) return s;
+  if (s.startsWith("//")) return `https:${s}`;
+  if (s.startsWith("/")) return `https://www.sankavollerei.com${s}`;
+
+  // Fallback: treat as a path relative to sankavollerei.
+  return `https://www.sankavollerei.com/${s}`;
+}
+
 export default async function ComicPage() {
   const data = await getHomepage();
   const latest = (data?.latest ?? [])
@@ -44,7 +58,7 @@ export default async function ComicPage() {
             key={c.slug}
             title={c.title}
             subtitle={c.chapter}
-            image={c.image ? `https://www.sankavollerei.com${c.image}` : undefined}
+            image={resolveComicImageUrl(c.image)}
             href={`/comic/${encodeURIComponent(c.slug)}`}
           />
         ))}
