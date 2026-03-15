@@ -10,6 +10,7 @@ import Genres from './components/Genres'
 import AZList from './components/AZList'
 import Search from './components/Search'
 import Schedule from './components/Schedule'
+import WatchHistory from './components/WatchHistory'
 import { ThemeProvider } from './contexts/ThemeContext'
 
 function App() {
@@ -17,19 +18,10 @@ function App() {
     <ThemeProvider>
       <a href="#main-content" className="skip-link">Lewati ke konten</a>
       <div className="app">
-        <div className="app-bg app-bg--sakura" aria-hidden="true">
-          {[...Array(55)].map((_, i) => (
-            <div
-              key={i}
-              className={`sakura-petal sakura-petal--${(i % 6) + 1}`}
-              style={{
-                '--i': i,
-                left: `${(i / 54) * 100}%`,
-                animationDuration: `${12 + (i % 8) * 1.5}s`,
-                animationDelay: `${i * -0.8}s`,
-              }}
-            />
-          ))}
+        <div className="floating-shapes" aria-hidden="true">
+          <div className="floating-shape floating-shape--1"></div>
+          <div className="floating-shape floating-shape--2"></div>
+          <div className="floating-shape floating-shape--3"></div>
         </div>
         <Header />
         <main id="main-content">
@@ -40,9 +32,11 @@ function App() {
           <Route path="/genres" element={<Genres />} />
           <Route path="/az-list" element={<AZList />} />
           <Route path="/schedule" element={<Schedule />} />
+          <Route path="/history" element={<WatchHistory />} />
           <Route path="/search" element={<Search />} />
           <Route path="/search/:query" element={<Search />} />
           <Route path="/anime/:animeId" element={<AnimeDetail />} />
+          <Route path="/anime/:provider/:animeId" element={<AnimeDetail />} />
           <Route path="/watch/:episodeId" element={<Watch />} />
         </Routes>
         </main>

@@ -154,10 +154,49 @@ const fetchAnime = async (endpoint, provider = 'default') => {
       },
     });
 
+    const contentType = response.headers.get('content-type') || '';
+
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`[${provider}] API Error ${response.status}:`, errorText);
-      throw new Error(`API request failed: ${response.status} ${response.statusText}`);
+      // Try to parse JSON error first
+      let parsed = null;
+      let rawText = null;
+
+      if (contentType.includes('application/json')) {
+        try {
+          parsed = await response.json();
+        } catch {
+          // ignore JSON parse error, fallback to text below
+        }
+      }
+
+      if (!parsed) {
+        rawText = await response.text();
+      }
+
+      // Compress noisy HTML error bodies in logs
+      const logBody = rawText && rawText.trim().startsWith('<')
+        ? '[HTML error body omitted]'
+        : (parsed || rawText);
+
+      console.error(
+        `[${provider}] API Error ${response.status}:`,
+        logBody,
+      );
+
+      // If backend wraps logical 404 inside body, surface as APIError 404
+      if (parsed && typeof parsed === 'object' && parsed.statusCode) {
+        const statusCode = Number(parsed.statusCode) || response.status;
+        const message =
+          parsed.message ||
+          parsed.statusMessage ||
+          `API request failed: ${statusCode}`;
+        throw new APIError(message, statusCode);
+      }
+
+      throw new APIError(
+        `API request failed: ${response.status} ${response.statusText}`,
+        response.status,
+      );
     }
 
     const data = await response.json();
@@ -202,9 +241,19 @@ const providers = {
   samehadaku: {
     getHome: () => fetchAnime('/samehadaku/home', 'samehadaku'),
     getOngoing: () => fetchAnime('/samehadaku/ongoing', 'samehadaku'),
+    getCompleted: () => fetchAnime('/samehadaku/completed', 'samehadaku'),
+    getPopular: () => fetchAnime('/samehadaku/popular', 'samehadaku'),
+    getMovies: () => fetchAnime('/samehadaku/movies', 'samehadaku'),
+    getList: () => fetchAnime('/samehadaku/list', 'samehadaku'),
+    getSchedule: () => fetchAnime('/samehadaku/schedule', 'samehadaku'),
     getGenres: () => fetchAnime('/samehadaku/genres', 'samehadaku'),
     getGenreAnime: (genreId) => fetchAnime(`/samehadaku/genres/${genreId}`, 'samehadaku'),
     search: (keyword) => fetchAnime(`/samehadaku/search/${encodeURIComponent(keyword)}`, 'samehadaku'),
+    getAnimeDetail: (animeId) => fetchAnime(`/samehadaku/anime/${animeId}`, 'samehadaku'),
+    getEpisodeDetail: (episodeId) => fetchAnime(`/samehadaku/episode/${episodeId}`, 'samehadaku'),
+    getStreamingServer: (serverId) => fetchAnime(`/samehadaku/server/${serverId}`, 'samehadaku'),
+    getBatchList: () => fetchAnime('/samehadaku/batch', 'samehadaku'),
+    getBatchDetail: (batchId) => fetchAnime(`/samehadaku/batch/${batchId}`, 'samehadaku'),
   },
   
   kusonime: {
@@ -240,11 +289,13 @@ const providers = {
   stream: {
     getLatest: () => fetchAnime('/stream/latest', 'stream'),
     getPopular: () => fetchAnime('/stream/popular', 'stream'),
-    getOngoing: () => fetchAnime('/stream/ongoing', 'stream'),
-    getCompleted: () => fetchAnime('/stream/completed', 'stream'),
+    getList: () => fetchAnime('/stream/list', 'stream'),
+    getMovie: () => fetchAnime('/stream/movie', 'stream'),
     getGenres: () => fetchAnime('/stream/genres', 'stream'),
     getGenreAnime: (slug) => fetchAnime(`/stream/genres/${slug}`, 'stream'),
     search: (keyword) => fetchAnime(`/stream/search/${encodeURIComponent(keyword)}`, 'stream'),
+    getAnimeDetail: (slug) => fetchAnime(`/stream/anime/${slug}`, 'stream'),
+    getEpisodeDetail: (slug) => fetchAnime(`/stream/episode/${slug}`, 'stream'),
   },
 };
 
@@ -267,6 +318,24 @@ export const animeAPI = {
      return defaultProvider.getHome();
    },
 
+   // Home data for Samehadaku
+   getHomeSamehadaku: async () => {
+     const providerAPI = providers.samehadaku;
+     if (!providerAPI?.getHome) {
+       throw new Error('Samehadaku provider does not support getHome');
+     }
+     return providerAPI.getHome();
+   },
+
+   // Home data for Stream (Anime Indo) using latest endpoint
+   getHomeStream: async () => {
+     const providerAPI = providers.stream;
+     if (!providerAPI?.getLatest) {
+       throw new Error('Stream provider does not support getLatest');
+     }
+     return providerAPI.getLatest();
+   },
+
    // Get anime detail (uses default provider)
    getAnimeDetail: async (slug) => {
      const defaultProvider = providers.otakudesu;
@@ -274,6 +343,24 @@ export const animeAPI = {
        throw new Error('Default provider does not support getAnimeDetail');
      }
      return defaultProvider.getAnimeDetail(slug);
+   },
+
+   // Samehadaku anime detail
+   getAnimeDetailSamehadaku: async (animeId) => {
+     const providerAPI = providers.samehadaku;
+     if (!providerAPI?.getAnimeDetail) {
+       throw new Error('Samehadaku provider does not support getAnimeDetail');
+     }
+     return providerAPI.getAnimeDetail(animeId);
+   },
+
+   // Stream anime detail
+   getAnimeDetailStream: async (slug) => {
+     const providerAPI = providers.stream;
+     if (!providerAPI?.getAnimeDetail) {
+       throw new Error('Stream provider does not support getAnimeDetail');
+     }
+     return providerAPI.getAnimeDetail(slug);
    },
 
    // Get episode detail (uses default provider)
@@ -285,6 +372,24 @@ export const animeAPI = {
      return defaultProvider.getEpisodeDetail(slug);
    },
 
+   // Samehadaku episode detail
+   getEpisodeDetailSamehadaku: async (episodeId) => {
+     const providerAPI = providers.samehadaku;
+     if (!providerAPI?.getEpisodeDetail) {
+       throw new Error('Samehadaku provider does not support getEpisodeDetail');
+     }
+     return providerAPI.getEpisodeDetail(episodeId);
+   },
+
+   // Stream episode detail
+   getEpisodeDetailStream: async (slug) => {
+     const providerAPI = providers.stream;
+     if (!providerAPI?.getEpisodeDetail) {
+       throw new Error('Stream provider does not support getEpisodeDetail');
+     }
+     return providerAPI.getEpisodeDetail(slug);
+   },
+
    // Get streaming server URL (uses default provider)
    getStreamingServer: async (serverId) => {
      const defaultProvider = providers.otakudesu;
@@ -292,6 +397,15 @@ export const animeAPI = {
        throw new Error('Default provider does not support getStreamingServer');
      }
      return defaultProvider.getStreamingServer(serverId);
+   },
+
+   // Samehadaku streaming server
+   getStreamingServerSamehadaku: async (serverId) => {
+     const providerAPI = providers.samehadaku;
+     if (!providerAPI?.getStreamingServer) {
+       throw new Error('Samehadaku provider does not support getStreamingServer');
+     }
+     return providerAPI.getStreamingServer(serverId);
    },
 
    // Get schedule (uses default provider)
@@ -303,6 +417,15 @@ export const animeAPI = {
      return defaultProvider.getSchedule();
    },
 
+   // Samehadaku schedule
+   getScheduleSamehadaku: async () => {
+     const providerAPI = providers.samehadaku;
+     if (!providerAPI?.getSchedule) {
+       throw new Error('Samehadaku provider does not support getSchedule');
+     }
+     return providerAPI.getSchedule();
+   },
+
    // Get batch download (uses default provider)
    getBatch: async (slug) => {
      const defaultProvider = providers.otakudesu;
@@ -310,6 +433,23 @@ export const animeAPI = {
        throw new Error('Default provider does not support getBatch');
      }
      return defaultProvider.getBatch(slug);
+   },
+
+   // Samehadaku batch list and detail
+   getBatchListSamehadaku: async () => {
+     const providerAPI = providers.samehadaku;
+     if (!providerAPI?.getBatchList) {
+       throw new Error('Samehadaku provider does not support getBatchList');
+     }
+     return providerAPI.getBatchList();
+   },
+
+   getBatchDetailSamehadaku: async (batchId) => {
+     const providerAPI = providers.samehadaku;
+     if (!providerAPI?.getBatchDetail) {
+       throw new Error('Samehadaku provider does not support getBatchDetail');
+     }
+     return providerAPI.getBatchDetail(batchId);
    },
 
    // Get unlimited list (A–Z style; uses default provider)
@@ -321,12 +461,13 @@ export const animeAPI = {
      return defaultProvider.getUnlimited();
    },
 
-   // Search across all providers
-   searchAll: async (keyword) => {
-     const searchResults = {};
-     const providerKeys = Object.keys(providers);
-     
-     for (const providerKey of providerKeys) {
+  // Search across active providers (Otakudesu + Samehadaku)
+  searchAll: async (keyword) => {
+    const searchResults = {};
+    // Batasi hanya ke 2 provider utama yang dipakai di UI
+    const providerKeys = ['otakudesu', 'samehadaku'];
+    
+    for (const providerKey of providerKeys) {
        try {
          const providerAPI = providers[providerKey];
          if (providerAPI.search) {
@@ -334,8 +475,19 @@ export const animeAPI = {
            searchResults[providerKey] = results;
          }
        } catch (error) {
-         console.error(`Error searching in ${providerKey}:`, error.message);
-         searchResults[providerKey] = { error: error.message };
+        // Untuk 404 (data tidak ditemukan) dari provider tertentu,
+        // kita anggap saja sebagai "tidak ada hasil" tanpa dianggap error global.
+        if (error instanceof APIError && error.statusCode === 404) {
+          searchResults[providerKey] = {
+            data: {
+              animeList: [],
+            },
+          };
+          continue;
+        }
+
+        console.error(`Error searching in ${providerKey}:`, error.message);
+        searchResults[providerKey] = { error: error.message };
        }
      }
      
@@ -369,8 +521,8 @@ export const animeAPI = {
      throw new Error('No providers available for search');
    },
   
-   // Get available providers
-   getProviders: () => Object.keys(providers),
+  // Get available providers (aktif di UI)
+  getProviders: () => ['otakudesu', 'samehadaku'],
   
    // Check if provider exists
    hasProvider: (provider) => Object.prototype.hasOwnProperty.call(providers, provider),
@@ -396,6 +548,15 @@ export const animeAPI = {
      return defaultProvider.getOngoing(page);
    },
 
+   // Samehadaku ongoing list
+   getOngoingSamehadaku: async () => {
+     const providerAPI = providers.samehadaku;
+     if (!providerAPI?.getOngoing) {
+       throw new Error('Samehadaku provider does not support getOngoing');
+     }
+     return providerAPI.getOngoing();
+   },
+
    // Get completed anime (uses default provider)
    getCompleted: async (page = 1) => {
      const defaultProvider = providers.otakudesu;
@@ -404,6 +565,24 @@ export const animeAPI = {
      }
      return defaultProvider.getCompleted(page);
    },
+
+   // Samehadaku completed list
+   getCompletedSamehadaku: async () => {
+     const providerAPI = providers.samehadaku;
+     if (!providerAPI?.getCompleted) {
+       throw new Error('Samehadaku provider does not support getCompleted');
+     }
+     return providerAPI.getCompleted();
+   },
+
+  // Samehadaku full A-Z style list
+  getListSamehadaku: async () => {
+    const providerAPI = providers.samehadaku;
+    if (!providerAPI?.getList) {
+      throw new Error('Samehadaku provider does not support list');
+    }
+    return providerAPI.getList();
+  },
 
    // Get all genres
    getGenres: async (provider = 'otakudesu') => {

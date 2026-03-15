@@ -124,7 +124,7 @@ const Search = () => {
 
       {searchResults && hasAnyResults && (
         <div className="search-results">
-          <div className="results-summary">
+          <div className="results-summary section section-neo">
             <h2>Hasil pencarian &quot;{query}&quot;</h2>
             <p>Ditemukan dari beberapa provider</p>
           </div>
@@ -144,11 +144,16 @@ const Search = () => {
             }
 
             return (
-              <div key={provider} className="provider-results">
+              <div key={provider} className="provider-results section section-neo">
                 <h3>{providerName} ({providerResults.length} hasil)</h3>
                 <div className="anime-grid">
                   {providerResults.map((anime, idx) => (
-                    <AnimeCard key={anime.animeId ?? anime.slug ?? idx} anime={anime} index={idx} />
+                    <AnimeCard
+                      key={anime.animeId ?? anime.slug ?? idx}
+                      anime={{ ...anime, provider: anime.provider ?? provider }}
+                      index={idx}
+                      providerHint={providerName}
+                    />
                   ))}
                 </div>
               </div>

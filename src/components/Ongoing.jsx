@@ -28,46 +28,54 @@ const Ongoing = () => {
   if (loading && animes.length === 0) {
     return (
       <div className="anime-list-page main-container">
-        <header className="page-header">
+        <header className="page-header section section-neo">
           <h1 className="main-title text-gradient">Sedang Tayang</h1>
-          <p className="subtitle">Anime yang sedang tayang</p>
+          <p className="subtitle">Daftar anime yang saat ini masih on-going dari Otakudesu.</p>
         </header>
-        <SkeletonAnimeGrid count={12} />
+        <section className="section section-neo">
+          <SkeletonAnimeGrid count={12} />
+        </section>
       </div>
     );
   }
 
   if (error && animes.length === 0) {
     return (
-      <div className="main-container">
-        <div className="error-container">
-          <div className="error-icon" aria-hidden>⚠️</div>
-          <p className="error-message">Gagal memuat anime sedang tayang: {error}</p>
-          <p className="error-hint">Server mungkin sedang bermasalah (mis. error 500). Coba lagi nanti.</p>
-          <button type="button" className="btn btn-primary" onClick={reset}>Coba Lagi</button>
-        </div>
+      <div className="anime-list-page main-container">
+        <section className="section section-neo">
+          <div className="error-container">
+            <div className="error-icon" aria-hidden>⚠️</div>
+            <p className="error-message">Gagal memuat anime sedang tayang: {error}</p>
+            <p className="error-hint">Server mungkin sedang bermasalah (mis. error 500). Coba lagi nanti.</p>
+            <button type="button" className="btn btn-primary" onClick={reset}>Coba Lagi</button>
+          </div>
+        </section>
       </div>
     );
   }
 
   return (
     <div className="anime-list-page main-container">
-      <header className="page-header">
+      <header className="page-header section section-neo">
         <h1 className="main-title text-gradient">Sedang Tayang</h1>
-        <p className="subtitle">Anime yang sedang tayang</p>
+        <p className="subtitle">Anime yang sedang tayang dari Otakudesu.</p>
         {error && <p className="error-message">{error}</p>}
       </header>
-      <div className="anime-grid">
-        {animes.map((anime, idx) => (
-          <AnimeCard
-            key={anime.animeId ?? anime.slug ?? idx}
-            anime={anime}
-            index={idx}
-            innerRef={idx === animes.length - 1 ? lastElementRef : undefined}
-            statusOverride="Ongoing"
-          />
-        ))}
-      </div>
+
+      <section className="section section-neo">
+        <div className="anime-grid">
+          {animes.map((anime, idx) => (
+            <AnimeCard
+              key={anime.animeId ?? anime.slug ?? idx}
+              anime={{ ...anime, provider: anime.provider ?? 'otakudesu' }}
+              index={idx}
+              innerRef={idx === animes.length - 1 ? lastElementRef : undefined}
+              statusOverride="Ongoing"
+              providerHint="Otakudesu"
+            />
+          ))}
+        </div>
+      </section>
 
       {loading && hasMore && (
         <div className="loading-more">

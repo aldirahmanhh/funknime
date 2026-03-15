@@ -19,6 +19,7 @@ const Header = () => {
 
   useEffect(() => {
     setMobileMenuOpen(false);
+    setShowDropdown(false);
   }, [location.pathname]);
 
   useEffect(() => {
@@ -41,7 +42,17 @@ const Header = () => {
       setSearchLoading(true);
       try {
         const data = await animeAPI.search(debouncedQuery);
-        const results = data?.data?.slice(0, 5) || [];
+        const root = data ?? {};
+        const list =
+          // Otakudesu-style: { data: { animeList: [] } }
+          root.data?.animeList ??
+          // Flattened list in data
+          (Array.isArray(root.data) ? root.data : null) ??
+          // Generic helpers / alternate shapes
+          root.results ??
+          root.animeList ??
+          [];
+        const results = Array.isArray(list) ? list.slice(0, 5) : [];
         setSuggestions(results);
       } catch (err) {
         console.error('Search error:', err);
@@ -83,9 +94,11 @@ const Header = () => {
     { to: '/genres', label: 'Genres' },
     { to: '/az-list', label: 'A-Z' },
     { to: '/schedule', label: 'Schedule' },
+    { to: '/history', label: 'Riwayat' },
   ];
 
   return (
+    <>
     <header className="header">
       <nav className="nav-container" aria-label="Main navigation">
         <div className="nav-brand">
@@ -141,7 +154,7 @@ const Header = () => {
                       onMouseDown={(e) => e.preventDefault()}
                     >
                       <img
-                        src={anime.poster || anime.poster_url || ''}
+                        src={anime.poster || anime.poster_url || undefined}
                         alt={anime.title || anime.name || 'Anime'}
                         className="suggestion-poster"
                         onError={(e) => { e.target.src = 'https://via.placeholder.com/44x64/2e2e2e/666?text=?'; }}
@@ -183,6 +196,14 @@ const Header = () => {
         />
       )}
     </header>
+
+    {/* Tombol search floating khusus mobile */}
+    {!mobileMenuOpen && !location.pathname.startsWith('/search') && (
+      <Link to="/search" className="mobile-search-fab" aria-label="Cari anime (mobile)">
+        🔍
+      </Link>
+    )}
+    </>
   );
 };
 

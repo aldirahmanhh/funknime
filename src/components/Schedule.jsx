@@ -59,7 +59,7 @@ const Schedule = () => {
 
   return (
     <div className="schedule-page main-container">
-      <header className="page-header schedule-hero">
+      <header className="page-header schedule-hero section section-neo">
         <h1 className="main-title text-gradient">Jadwal Tayang</h1>
         <p className="subtitle">Anime yang tayang per hari</p>
       </header>
@@ -77,8 +77,9 @@ const Schedule = () => {
                 {list.map((anime, i) => (
                   <AnimeCard
                     key={anime.animeId ?? anime.slug ?? i}
-                    anime={{ ...anime, animeId: anime.animeId ?? anime.slug }}
+                    anime={{ ...anime, animeId: anime.animeId ?? anime.slug, provider: anime.provider ?? 'otakudesu' }}
                     index={i}
+                    providerHint="Otakudesu"
                   />
                 ))}
               </div>

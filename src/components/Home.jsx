@@ -5,6 +5,7 @@ import { SkeletonAnimeGrid } from './Skeleton';
 import AnimeCard from './AnimeCard';
 import AnimeCarousel from './AnimeCarousel';
 import Footer from './Footer';
+import { getWatchHistory } from '../utils/watchHistory';
 
 const DAY_ORDER = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 
@@ -13,15 +14,83 @@ const Home = () => {
   const [scheduleData, setScheduleData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [watchHistory, setWatchHistory] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [homeRes, scheduleRes] = await Promise.all([
+        const [
+          homeRes,
+          sameOngoingRes,
+          sameCompletedRes,
+          scheduleRes,
+        ] = await Promise.all([
           animeAPI.getHome(),
+          animeAPI.getOngoingSamehadaku().catch(() => null),
+          animeAPI.getCompletedSamehadaku().catch(() => null),
           animeAPI.getSchedule().catch(() => null),
         ]);
-        setHomeData(homeRes);
+
+        const otakOngoing = homeRes?.data?.ongoing?.animeList || [];
+        const otakCompleted = homeRes?.data?.completed?.animeList || [];
+        const sameOngoing = sameOngoingRes?.data?.animeList || [];
+        const sameCompleted = sameCompletedRes?.data?.animeList || [];
+
+        const normalizeKey = (item) => {
+          const raw = (item.title || item.name || '').toString().toLowerCase();
+          return raw.replace(/\s+/g, ' ').trim();
+        };
+
+        const mergeLists = (otakList, sameList, status) => {
+          const map = new Map();
+
+          otakList.forEach((a) => {
+            const key = normalizeKey(a);
+            const existing = map.get(key);
+            const base = existing || {};
+            map.set(key, {
+              ...base,
+              ...a,
+              providers: base.providers
+                ? Array.from(new Set([...base.providers, 'otakudesu']))
+                : ['otakudesu'],
+              provider: 'otakudesu',
+              status,
+            });
+          });
+
+          sameList.forEach((a) => {
+            const key = normalizeKey(a);
+            const existing = map.get(key);
+            if (existing) {
+              const providers = existing.providers
+                ? Array.from(new Set([...existing.providers, 'samehadaku']))
+                : ['samehadaku'];
+              map.set(key, {
+                ...existing,
+                providers,
+              });
+            } else {
+              map.set(key, {
+                ...a,
+                providers: ['samehadaku'],
+                provider: 'samehadaku',
+                status,
+              });
+            }
+          });
+
+          return Array.from(map.values());
+        };
+
+        const mergedOngoing = mergeLists(otakOngoing, sameOngoing, 'Ongoing');
+        const mergedCompleted = mergeLists(otakCompleted, sameCompleted, 'Completed');
+
+        setHomeData({
+          ongoing: mergedOngoing,
+          completed: mergedCompleted,
+        });
+
         if (scheduleRes?.data) setScheduleData(scheduleRes);
       } catch (err) {
         setError(err?.message ?? 'Gagal memuat data');
@@ -31,6 +100,7 @@ const Home = () => {
       }
     };
     fetchData();
+    setWatchHistory(getWatchHistory());
   }, []);
 
   if (loading) {
@@ -70,66 +140,130 @@ const Home = () => {
     );
   }
 
-  const ongoing = homeData?.data?.ongoing?.animeList || [];
-  const completed = homeData?.data?.completed?.animeList || [];
+  const ongoing = homeData?.ongoing || [];
+  const completed = homeData?.completed || [];
   const days = Array.isArray(scheduleData?.data) ? scheduleData.data : [];
 
-  const renderSection = (title, animeList, linkPath, linkLabel, statusOverride) => {
-    if (!animeList || animeList.length === 0) {
+  const buildRailItems = (animeList, statusOverride) =>
+    (animeList || []).map((anime, idx) => {
+      const providers = anime.providers || (anime.provider ? [anime.provider] : []);
+      const hasOtak = providers.includes('otakudesu');
+      const hasSame = providers.includes('samehadaku');
+
+      let providerHint = 'Otakudesu';
+      if (hasOtak && hasSame) providerHint = 'Otakudesu & Samehadaku';
+      else if (hasSame) providerHint = 'Samehadaku';
+
       return (
-        <section className="section section-neo">
-          <div className="section-header section-header-neo">
-            <h2 className="section-title section-title-neo">{title}</h2>
-            {linkPath && (
-              <Link to={linkPath} className="view-all">{linkLabel || 'Lihat Semua'}</Link>
-            )}
-          </div>
-          <div className="no-data">Belum ada anime</div>
-        </section>
+        <div className="home-rail-card" key={anime.animeId ?? anime.slug ?? idx}>
+          <AnimeCard
+            anime={{
+              ...anime,
+              provider: hasOtak ? 'otakudesu' : (hasSame ? 'samehadaku' : anime.provider),
+            }}
+            index={idx}
+            statusOverride={statusOverride}
+            providerHint={providerHint}
+          />
+        </div>
       );
-    }
-    return (
-      <section className="section section-neo fade-in">
-        <div className="section-header section-header-neo">
-          <h2 className="section-title section-title-neo">{title}</h2>
-          {linkPath && (
-            <Link to={linkPath} className="view-all">{linkLabel || 'Lihat Semua →'}</Link>
-          )}
-        </div>
-        <div className="anime-grid">
-          {animeList.map((anime, idx) => (
-            <AnimeCard key={anime.animeId ?? anime.slug ?? idx} anime={anime} index={idx} statusOverride={statusOverride} />
-          ))}
-        </div>
-      </section>
-    );
-  };
+    });
 
   const popularList = ongoing.length >= 4 ? ongoing : [...ongoing, ...completed].slice(0, 10);
+  const featured = popularList[0] || ongoing[0] || completed[0] || null;
 
   return (
     <div className="home-container main-container">
-      <header className="page-header home-hero">
-        <h1 className="main-title text-gradient">Funknime – Streaming Anime Sub Indo</h1>
-        <p className="subtitle">
-          Situs streaming anime sub Indonesia. Katalog, jadwal, dan update episode terbaru untuk nonton anime online.
-        </p>
-        <div className="home-hero-actions">
-          <Link to="/search" className="btn btn-primary">Cari anime</Link>
-          <Link to="/schedule" className="btn btn-secondary">Jadwal</Link>
+      <header className="page-header home-hero home-hero--streaming">
+        <div className="home-hero-copy">
+          <h1 className="main-title text-gradient" data-text="FUNKNIME">FUNKNIME</h1>
+          <p className="subtitle">
+            Streaming anime sub Indo dengan katalog gabungan Otakudesu &amp; Samehadaku.
+          </p>
+          <div className="home-hero-actions">
+            <Link to="/search" className="btn btn-primary">Mulai cari anime</Link>
+            <Link to="/ongoing" className="btn btn-secondary">Lihat yang sedang tayang</Link>
+          </div>
         </div>
-        {popularList.length > 0 && (
-          <AnimeCarousel items={popularList} title="Anime Populer" maxItems={12} />
+        {ongoing.length > 0 && (
+          <div className="home-hero-featured">
+            <AnimeCarousel items={ongoing.slice(0, 8)} maxItems={5} />
+          </div>
         )}
       </header>
 
-      {renderSection('Sedang Tayang', ongoing, '/ongoing', 'Buka daftar', 'Ongoing')}
-      {renderSection('Baru Selesai', completed, '/completed', 'Lihat Semua', 'Completed')}
+      {watchHistory.length > 0 && (
+        <section className="section home-rail">
+          <div className="section-header home-rail-header">
+            <h2 className="section-title">Lanjut tonton</h2>
+            <Link to="/history" className="view-all">Lihat semua</Link>
+          </div>
+          <div className="home-rail-scroll">
+            {watchHistory.slice(0, 12).map((item, idx) => (
+              <div className="home-rail-card" key={`${item.animeId}-${item.episodeId}-${idx}`}>
+                <Link
+                  to={`/watch/${item.episodeId}`}
+                  state={{ provider: item.provider, backAnimeId: item.animeId }}
+                  className="anime-card card"
+                >
+                  <div className="card-image-wrapper">
+                    <span className="anime-card-badge anime-card-badge--ongoing">
+                      Lanjut
+                    </span>
+                    {item.poster && (
+                      <img
+                        src={item.poster}
+                        alt={item.animeTitle}
+                        className="poster"
+                      />
+                    )}
+                    <div className="card-overlay">
+                      <span className="play-icon" aria-hidden>▶</span>
+                    </div>
+                  </div>
+                  <div className="anime-info">
+                    <h3>{item.animeTitle}</h3>
+                    <div className="meta">
+                      <span className="episode-count">
+                        🎬 {item.episodeTitle || `Episode ${item.episodeId}`}
+                      </span>
+                    </div>
+                  </div>
+                </Link>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {ongoing.length > 0 && (
+        <section className="section home-rail">
+          <div className="section-header home-rail-header">
+            <h2 className="section-title">Sedang tayang</h2>
+            <Link to="/ongoing" className="view-all">Lihat semua</Link>
+          </div>
+          <div className="home-rail-scroll">
+            {buildRailItems(ongoing, 'Ongoing')}
+          </div>
+        </section>
+      )}
+
+      {completed.length > 0 && (
+        <section className="section home-rail">
+          <div className="section-header home-rail-header">
+            <h2 className="section-title">Baru selesai</h2>
+            <Link to="/completed" className="view-all">Lihat semua</Link>
+          </div>
+          <div className="home-rail-scroll">
+            {buildRailItems(completed, 'Completed')}
+          </div>
+        </section>
+      )}
 
       {days.length > 0 && (
-        <section className="section section-neo">
+        <section className="section section-neo home-schedule-preview">
           <div className="section-header section-header-neo">
-            <h2 className="section-title section-title-neo">Ringkasan jadwal mingguan</h2>
+            <h2 className="section-title section-title-neo">Ringkasan jadwal</h2>
             <Link to="/schedule" className="view-all">Buka jadwal</Link>
           </div>
           <div className="schedule-summary">

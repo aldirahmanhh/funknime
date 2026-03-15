@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { animeAPI } from '../services/api';
+import { addToWatchHistory } from '../utils/watchHistory';
 
 const Watch = () => {
   const { episodeId } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const [episodeData, setEpisodeData] = useState(null);
   const [animeData, setAnimeData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -19,18 +21,53 @@ const Watch = () => {
       try {
         setLoading(true);
         const data = await animeAPI.getEpisodeDetail(episodeId);
-        setEpisodeData(data?.data || null);
+        const raw = data?.data || null;
+
+        // Normalize common shapes from different providers
+        let normalized = raw;
+
+        // Otakudesu-style: servers[] at root of data
+        if (raw && !raw.server && Array.isArray(raw.servers)) {
+          const firstServer = raw.servers[0] || {};
+          normalized = {
+            ...raw,
+            defaultStreamingUrl: raw.defaultStreamingUrl || firstServer.url,
+            server: {
+              qualities: [
+                {
+                  title: 'Default',
+                  serverList: raw.servers.map((s, idx) => ({
+                    ...s,
+                    title: s.name || s.server || `Server ${idx + 1}`,
+                  })),
+                },
+              ],
+            },
+          };
+        }
+
+        setEpisodeData(normalized);
 
         // Set default streaming URL
-        if (data?.data?.defaultStreamingUrl) {
-          setVideoUrl(data.data.defaultStreamingUrl);
+        if (normalized?.defaultStreamingUrl) {
+          setVideoUrl(normalized.defaultStreamingUrl);
         }
 
         // Also fetch anime details
-        if (data?.data?.animeId) {
+        if (normalized?.animeId) {
           try {
-            const animeRes = await animeAPI.getAnimeDetail(data.data.animeId);
+            const animeRes = await animeAPI.getAnimeDetail(normalized.animeId);
             setAnimeData(animeRes?.data || null);
+
+            // Simpan ke riwayat tonton (localStorage)
+            addToWatchHistory({
+              animeId: animeRes?.data?.animeId || normalized.animeId,
+              episodeId,
+              animeTitle: animeRes?.data?.title || normalized.title || episodeId,
+              episodeTitle: normalized.title || episodeId,
+              poster: animeRes?.data?.poster || animeRes?.data?.poster_url || '',
+              provider: location.state?.provider || 'otakudesu',
+            });
           } catch (e) {
             console.log('Could not load anime details');
           }

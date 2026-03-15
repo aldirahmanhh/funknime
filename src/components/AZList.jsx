@@ -1,20 +1,16 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { animeAPI } from '../services/api';
 import ErrorPage from './ErrorPage';
 import './AZList.css';
 
 const AZList = () => {
-  const [unlimitedList, setUnlimitedList] = useState([]);
+  const [allAnime, setAllAnime] = useState([]);
   const [letters, setLetters] = useState([]);
   const [animeByLetter, setAnimeByLetter] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedLetter, setSelectedLetter] = useState(null);
-
-  const allAnime = useMemo(() => {
-    return (unlimitedList || []).flatMap((g) => g.animeList ?? []);
-  }, [unlimitedList]);
 
   useEffect(() => {
     let cancelled = false;
@@ -22,18 +18,118 @@ const AZList = () => {
       setLoading(true);
       setError(null);
       try {
-        const res = await animeAPI.getUnlimited();
+        const [otakRes, sameRes] = await Promise.all([
+          animeAPI.getUnlimited(),
+          animeAPI.getListSamehadaku().catch(() => null),
+        ]);
         if (cancelled) return;
-        const list = res?.data?.list ?? res?.list ?? [];
-        setUnlimitedList(Array.isArray(list) ? list : []);
-        const startWiths = (Array.isArray(list) ? list : []).map((x) => x.startWith).filter(Boolean);
-        setLetters([...new Set(startWiths)].sort((a, b) => {
+
+        const otakGroups = otakRes?.data?.list ?? otakRes?.list ?? [];
+        const otakItems = Array.isArray(otakGroups)
+          ? otakGroups.flatMap((g) =>
+              (g.animeList ?? []).map((a) => {
+                const title = a.title ?? a.name ?? '';
+                const firstChar = (g.startWith || title[0] || '#').toString().toUpperCase();
+                return {
+                  ...a,
+                  title,
+                  providers: ['otakudesu'],
+                  provider: 'otakudesu',
+                  __letter: firstChar,
+                };
+              }),
+            )
+          : [];
+
+        let sameItems = [];
+        if (sameRes) {
+          const root = sameRes?.data ?? sameRes ?? {};
+          const raw =
+            root.list ??
+            root.animeList ??
+            (Array.isArray(root) ? root : []);
+
+          if (Array.isArray(raw) && raw.length > 0) {
+            // Bentuk grup per huruf: [{ startWith, animeList: [] }, ...]
+            if (Array.isArray(raw[0]?.animeList)) {
+              sameItems = raw.flatMap((g) =>
+                (g.animeList ?? []).map((a) => {
+                  const title = a.title ?? a.name ?? '';
+                  const firstChar = (g.startWith || title[0] || '#').toString().toUpperCase();
+                  const href = a.href || a.url || '';
+                  const slugFromHref = href.split('/').filter(Boolean).pop();
+                  return {
+                    ...a,
+                    title,
+                    animeId: a.animeId ?? a.slug ?? slugFromHref,
+                    providers: ['samehadaku'],
+                    provider: 'samehadaku',
+                    __letter: firstChar,
+                  };
+                }),
+              );
+            } else {
+              // Bentuk flat list: animeList: []
+              sameItems = raw.map((a) => {
+                const title = a.title ?? a.name ?? '';
+                const firstChar = (title[0] || '#').toString().toUpperCase();
+                const href = a.href || a.url || '';
+                const slugFromHref = href.split('/').filter(Boolean).pop();
+                return {
+                  ...a,
+                  title,
+                  animeId: a.animeId ?? a.slug ?? slugFromHref,
+                  providers: ['samehadaku'],
+                  provider: 'samehadaku',
+                  __letter: firstChar,
+                };
+              });
+            }
+          }
+        }
+
+        const normalizeKey = (item) =>
+          (item.title || item.name || '').toString().toLowerCase().replace(/\s+/g, ' ').trim();
+
+        const map = new Map();
+
+        [...otakItems, ...sameItems].forEach((item) => {
+          const key = normalizeKey(item);
+          const existing = map.get(key);
+          if (existing) {
+            const providers = Array.from(new Set([...(existing.providers || []), ...(item.providers || [])]));
+            map.set(key, {
+              ...existing,
+              ...item,
+              providers,
+              provider: providers.includes('otakudesu') ? 'otakudesu' : providers[0],
+              __letter: (item.__letter || existing.__letter || '#').toString().toUpperCase(),
+            });
+          } else {
+            map.set(key, item);
+          }
+        });
+
+        const unified = Array.from(map.values());
+
+        const lettersSet = new Set(
+          unified
+            .map((a) => a.__letter)
+            .filter(Boolean)
+            .map((c) => c.toString().toUpperCase()),
+        );
+
+        const sortedLetters = [...lettersSet].sort((a, b) => {
           if (a === '#') return 1;
           if (b === '#') return -1;
-          const numA = /^\d$/.test(a) ? parseInt(a, 10) : a.charCodeAt(0);
-          const numB = /^\d$/.test(b) ? parseInt(b, 10) : b.charCodeAt(0);
-          return numA - numB;
-        }));
+          return a.localeCompare(b);
+        });
+
+        unified.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+
+        setAllAnime(unified);
+        setLetters(sortedLetters);
+        setAnimeByLetter(unified);
       } catch (err) {
         if (cancelled) return;
         const msg = (err?.message ?? (typeof err?.toString === 'function' ? err.toString() : String(err))) || 'Gagal memuat daftar A-Z';
@@ -53,8 +149,8 @@ const AZList = () => {
       setAnimeByLetter(allAnime);
       return;
     }
-    const group = unlimitedList.find((x) => x.startWith === letter);
-    setAnimeByLetter(group?.animeList ?? []);
+    const filtered = allAnime.filter((a) => a.__letter === letter);
+    setAnimeByLetter(filtered);
   };
 
   useEffect(() => {
@@ -134,10 +230,19 @@ const AZList = () => {
                 {animeByLetter.map((anime, idx) => {
                   const id = anime.animeId ?? anime.slug ?? idx;
                   const title = anime.title ?? anime.name ?? `Anime ${idx + 1}`;
+                  const providers = Array.isArray(anime.providers) ? anime.providers : (anime.provider ? [anime.provider] : []);
+                  const hasOtak = providers.includes('otakudesu');
+                  const hasSame = providers.includes('samehadaku');
+                  const primaryProvider = hasOtak ? 'otakudesu' : (hasSame ? 'samehadaku' : (providers[0] || 'otakudesu'));
+
                   return (
                     <li key={id}>
-                      <Link to={`/anime/${id}`} className="az-anime-row">
+                      <Link to={`/anime/${primaryProvider}/${id}`} className="az-anime-row">
                         <span className="az-anime-title">{title}</span>
+                        <span className="az-anime-providers">
+                          {hasOtak && <span className="az-provider-pill az-provider-pill--otakudesu">Otakudesu</span>}
+                          {hasSame && <span className="az-provider-pill az-provider-pill--samehadaku">Samehadaku</span>}
+                        </span>
                         <span className="az-anime-arrow" aria-hidden>→</span>
                       </Link>
                     </li>

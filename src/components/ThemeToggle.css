@@ -1,21 +1,27 @@
-/* ThemeToggle – Neobrutalism */
+/* ThemeToggle – Playful Neobrutalism */
 
 .theme-toggle {
   background: var(--color-surface);
-  border: 3px solid var(--color-border);
-  border-radius: var(--radius-md);
-  padding: var(--space-1);
-  width: 56px;
-  height: 32px;
+  border: 4px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-2);
+  width: 64px;
+  height: 36px;
   cursor: pointer;
   position: relative;
-  box-shadow: var(--shadow-soft);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-fast);
 }
 
 .theme-toggle:hover {
-  transform: translate(2px, 2px);
-  box-shadow: 2px 2px 0 var(--color-border);
+  transform: translate(3px, 3px) scale(1.05);
+  box-shadow: var(--shadow-sm);
+  border-color: var(--color-primary);
+}
+
+.theme-toggle:active {
+  transform: translate(5px, 5px) scale(0.95);
+  box-shadow: none;
 }
 
 .theme-toggle-inner {
@@ -25,39 +31,83 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 var(--space-1);
+  padding: 0 var(--space-2);
 }
 
 .sun, .moon {
-  width: 22px;
-  height: 22px;
-  border-radius: var(--radius-sm);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
-  transition: opacity 0.2s ease, background 0.2s ease;
-  border: 2px solid var(--color-border);
+  font-size: 14px;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  border: 3px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
 }
 
 .sun {
-  background: var(--color-primary);
-  color: var(--color-primary-ink);
-  opacity: 0.4;
+  background: var(--color-accent);
+  color: var(--color-text);
+  opacity: 0.5;
+  transform: translateX(-5px) scale(0.8);
 }
 
 .sun.active {
   opacity: 1;
-  box-shadow: 2px 2px 0 var(--color-border);
+  transform: translateX(0) scale(1);
+  box-shadow: var(--shadow-md);
+  background: var(--color-primary);
 }
 
 .moon {
   background: var(--color-secondary);
-  color: var(--color-surface);
-  opacity: 0.4;
+  color: var(--color-text);
+  opacity: 0.5;
+  transform: translateX(5px) scale(0.8);
 }
 
 .moon.active {
   opacity: 1;
-  box-shadow: 2px 2px 0 var(--color-border);
+  transform: translateX(0) scale(1);
+  box-shadow: var(--shadow-md);
+  background: var(--color-bg);
+}
+
+.theme-toggle::after {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  background: linear-gradient(90deg, var(--color-primary), var(--color-secondary));
+  border-radius: var(--radius-md);
+  opacity: 0;
+  transform: scaleX(0);
+  transition: all 0.3s ease;
+  z-index: 0;
+}
+
+.theme-toggle:hover::after {
+  opacity: 0.1;
+}
+
+.theme-toggle:active::after {
+  opacity: 0.2;
+  transform: scaleX(1);
+}
+
+.theme-toggle-inner > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Bounce animation on click */
+@keyframes toggleBounce {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+.theme-toggle:active .sun,
+.theme-toggle:active .moon {
+  animation: toggleBounce 0.3s ease;
 }

@@ -19,10 +19,53 @@ const Genres = () => {
       setLoading(true);
       setError(null);
       try {
-        const data = await animeAPI.getGenres();
+        const [otak, same] = await Promise.all([
+          animeAPI.getGenres('otakudesu'),
+          animeAPI.getGenres('samehadaku').catch(() => null),
+        ]);
         if (cancelled) return;
-        const list = data?.data?.genreList ?? data?.genreList ?? (Array.isArray(data) ? data : []);
-        setGenres(list);
+
+        const normalizeList = (data, provider) => {
+          const raw = data?.data?.genreList ?? data?.genreList ?? (Array.isArray(data) ? data : []);
+          if (!Array.isArray(raw)) return [];
+          return raw.map((g) => ({
+            ...g,
+            title: g.title || g.name || '',
+            provider,
+            providers: [provider],
+          }));
+        };
+
+        const otakList = normalizeList(otak, 'otakudesu');
+        const sameList = same ? normalizeList(same, 'samehadaku') : [];
+
+        const map = new Map();
+        const normKey = (name) => (name || '').toString().toLowerCase().trim();
+
+        [...otakList, ...sameList].forEach((g) => {
+          const key = normKey(g.title);
+          const existing = map.get(key);
+          if (existing) {
+            const providers = Array.from(new Set([...(existing.providers || []), ...(g.providers || [])]));
+            map.set(key, {
+              ...existing,
+              ...g,
+              providers,
+              otakSlug: existing.otakSlug || (g.provider === 'otakudesu' ? g.genreId : null),
+              sameId: existing.sameId || (g.provider === 'samehadaku' ? g.genreId : null),
+            });
+          } else {
+            map.set(key, {
+              ...g,
+              providers: g.providers,
+              otakSlug: g.provider === 'otakudesu' ? g.genreId : null,
+              sameId: g.provider === 'samehadaku' ? g.genreId : null,
+            });
+          }
+        });
+
+        const merged = Array.from(map.values()).sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+        setGenres(merged);
       } catch (err) {
         if (cancelled) return;
         const msg = (err?.message ?? (typeof err?.toString === 'function' ? err.toString() : String(err))) || 'Gagal memuat genre';
@@ -42,9 +85,42 @@ const Genres = () => {
     setAnimeByGenre([]);
     
     try {
-      const slug = genre.genreId ?? genre.slug ?? genre.id ?? genre;
-      const data = await animeAPI.getAnimeByGenre(slug);
-      setAnimeByGenre(data?.data?.animeList ?? data?.animeList ?? []);
+      const results = [];
+      if (genre.otakSlug) {
+        try {
+          const res = await animeAPI.getAnimeByGenre(genre.otakSlug, 'otakudesu');
+          const list = res?.data?.animeList ?? res?.animeList ?? [];
+          list.forEach((a) => results.push({ ...a, provider: 'otakudesu', providers: ['otakudesu'] }));
+        } catch {}
+      }
+      if (genre.sameId) {
+        try {
+          const res = await animeAPI.getAnimeByGenre(genre.sameId, 'samehadaku');
+          const list = res?.data?.animeList ?? res?.animeList ?? [];
+          list.forEach((a) => results.push({ ...a, provider: 'samehadaku', providers: ['samehadaku'] }));
+        } catch {}
+      }
+
+      const normKey = (item) =>
+        (item.title || item.name || '').toString().toLowerCase().replace(/\s+/g, ' ').trim();
+      const map = new Map();
+      results.forEach((item) => {
+        const key = normKey(item);
+        const existing = map.get(key);
+        if (existing) {
+          const providers = Array.from(new Set([...(existing.providers || []), ...(item.providers || [])]));
+          map.set(key, {
+            ...existing,
+            ...item,
+            providers,
+            provider: providers.includes('otakudesu') ? 'otakudesu' : providers[0],
+          });
+        } else {
+          map.set(key, item);
+        }
+      });
+
+      setAnimeByGenre(Array.from(map.values()));
     } catch (err) {
       console.error('Genre anime fetch error:', err);
       setAnimeByGenre([]);
@@ -55,6 +131,8 @@ const Genres = () => {
 
   const GenreCard = ({ genre }) => {
     const genreName = genre.title || genre.name || genre;
+    const hasOtak = genre.providers?.includes('otakudesu');
+    const hasSame = genre.providers?.includes('samehadaku');
     
     return (
       <div 
@@ -62,6 +140,10 @@ const Genres = () => {
         onClick={() => handleGenreClick(genre)}
       >
         <span className="genre-name">{genreName}</span>
+        <div className="genre-providers">
+          {hasOtak && <span className="az-provider-pill az-provider-pill--otakudesu">Otakudesu</span>}
+          {hasSame && <span className="az-provider-pill az-provider-pill--samehadaku">Samehadaku</span>}
+        </div>
       </div>
     );
   };
@@ -81,7 +163,7 @@ const Genres = () => {
 
   return (
     <div className="genres-page main-container">
-      <header className="page-header genres-header genres-hero">
+      <header className="page-header genres-header genres-hero section section-neo">
         <h1 className="main-title text-gradient">Jelajahi Genre</h1>
         <p className="subtitle">Temukan anime berdasarkan genre favorit</p>
       </header>
@@ -134,7 +216,16 @@ const Genres = () => {
               ) : (
                 <div className="anime-grid">
                   {animeByGenre.map((anime, idx) => (
-                    <AnimeCard key={anime.animeId ?? anime.slug ?? idx} anime={anime} index={idx} />
+                    <AnimeCard
+                      key={anime.animeId ?? anime.slug ?? idx}
+                      anime={anime}
+                      index={idx}
+                      providerHint={
+                        anime.providers?.length > 1
+                          ? 'Otakudesu & Samehadaku'
+                          : (anime.provider === 'samehadaku' ? 'Samehadaku' : 'Otakudesu')
+                      }
+                    />
                   ))}
                 </div>
               )}
