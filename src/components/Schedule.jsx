@@ -5,6 +5,30 @@ import AnimeCard from './AnimeCard';
 import ErrorPage from './ErrorPage';
 import './Schedule.css';
 
+const normalizeKey = (item) => 
+  (item.title || item.name || '').toString().toLowerCase().replace(/\s+/g, ' ').trim();
+
+const mergeScheduleLists = (list1, list2) => {
+  const map = new Map();
+  
+  list1.forEach((a) => {
+    const key = normalizeKey(a);
+    map.set(key, { ...a, providers: ['otakudesu'], provider: 'otakudesu' });
+  });
+  
+  list2.forEach((a) => {
+    const key = normalizeKey(a);
+    const existing = map.get(key);
+    if (existing) {
+      map.set(key, { ...existing, providers: ['otakudesu', 'samehadaku'] });
+    } else {
+      map.set(key, { ...a, providers: ['samehadaku'], provider: 'samehadaku' });
+    }
+  });
+  
+  return Array.from(map.values());
+};
+
 const Schedule = () => {
   const [scheduleData, setScheduleData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -13,8 +37,40 @@ const Schedule = () => {
   useEffect(() => {
     const fetchSchedule = async () => {
       try {
-        const data = await animeAPI.getSchedule();
-        setScheduleData(data);
+        const [otakRes, sameRes] = await Promise.all([
+          animeAPI.getSchedule().catch(() => null),
+          animeAPI.getScheduleSamehadaku().catch(() => null),
+        ]);
+        
+        // Merge schedules from both providers
+        const otakDays = Array.isArray(otakRes?.data) ? otakRes.data : [];
+        const sameDays = Array.isArray(sameRes?.data?.schedule) ? sameRes.data.schedule : [];
+        
+        // Combine by day
+        const dayMap = new Map();
+        const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+        
+        const processDay = (dayItem, provider) => {
+          const dayName = dayItem.day || dayNames[dayNames.indexOf(dayItem.day)];
+          const list = dayItem.anime_list ?? dayItem.animeList ?? dayItem.list ?? [];
+          
+          if (!dayMap.has(dayName)) {
+            dayMap.set(dayName, []);
+          }
+          
+          const merged = mergeScheduleLists(dayMap.get(dayName), list.map(a => ({ ...a, provider })));
+          dayMap.set(dayName, merged);
+        };
+        
+        otakDays.forEach(d => processDay(d, 'otakudesu'));
+        sameDays.forEach(d => processDay(d, 'samehadaku'));
+        
+        const mergedDays = Array.from(dayMap.entries()).map(([day, animeList]) => ({
+          day,
+          animeList,
+        }));
+        
+        setScheduleData({ data: mergedDays });
       } catch (err) {
         const msg = (err?.message ?? (typeof err?.toString === 'function' ? err.toString() : String(err))) || 'Gagal memuat jadwal';
         setError(String(msg));
@@ -66,22 +122,29 @@ const Schedule = () => {
 
       {days.length > 0 ? (
         days.map((dayItem, idx) => {
-          const dayName = dayItem.day ?? dayNames[idx % 7] ?? `Day ${idx + 1}`;
-          const list = dayItem.anime_list ?? dayItem.animeList ?? dayItem.list ?? dayItem.anime ?? [];
+          const dayName = dayItem.day ?? dayItem.day ?? `Day ${idx + 1}`;
+          const list = dayItem.animeList ?? dayItem.anime_list ?? dayItem.anime ?? [];
           return (
             <section key={`${dayName}-${idx}`} className="schedule-day-section section section-neo">
               <div className="section-header section-header-neo">
                 <h2 className="section-title section-title-neo">{dayName}</h2>
               </div>
               <div className="anime-grid">
-                {list.map((anime, i) => (
-                  <AnimeCard
-                    key={anime.animeId ?? anime.slug ?? i}
-                    anime={{ ...anime, animeId: anime.animeId ?? anime.slug, provider: anime.provider ?? 'otakudesu' }}
-                    index={i}
-                    providerHint="Otakudesu"
-                  />
-                ))}
+                {list.map((anime, i) => {
+                  const providers = anime.providers || [anime.provider];
+                  const hasOtak = providers.includes('otakudesu');
+                  const hasSame = providers.includes('samehadaku');
+                  const providerHint = hasOtak && hasSame ? 'Otakudesu & Samehadaku' : (hasSame ? 'Samehadaku' : 'Otakudesu');
+                  
+                  return (
+                    <AnimeCard
+                      key={anime.animeId ?? anime.slug ?? i}
+                      anime={{ ...anime, animeId: anime.animeId ?? anime.slug, provider: anime.provider ?? 'otakudesu' }}
+                      index={i}
+                      providerHint={providerHint}
+                    />
+                  );
+                })}
               </div>
             </section>
           );

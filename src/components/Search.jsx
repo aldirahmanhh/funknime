@@ -65,7 +65,8 @@ const Search = () => {
   };
 
   const hasAnyResults = searchResults && Object.values(searchResults).some((r) => {
-    if (!r || r.error) return false;
+    if (!r) return false;
+    if (r.error) return false;
     if (Array.isArray(r)) return r.length > 0;
     const list = r.data?.animeList ?? r.animeList ?? r.data;
     return Array.isArray(list) ? list.length > 0 : false;

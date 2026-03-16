@@ -183,20 +183,20 @@ const fetchAnime = async (endpoint, provider = 'default') => {
         logBody,
       );
 
-      // If backend wraps logical 404 inside body, surface as APIError 404
-      if (parsed && typeof parsed === 'object' && parsed.statusCode) {
-        const statusCode = Number(parsed.statusCode) || response.status;
-        const message =
-          parsed.message ||
-          parsed.statusMessage ||
-          `API request failed: ${statusCode}`;
-        throw new APIError(message, statusCode);
+      // Return the parsed data or a "not found" object even if HTTP status is error
+      // This allows caller to handle "not found" cases gracefully
+      if (parsed && typeof parsed === 'object') {
+        return parsed;
       }
 
-      throw new APIError(
-        `API request failed: ${response.status} ${response.statusText}`,
-        response.status,
-      );
+      // For non-JSON responses (like HTML error pages), return "not found" instead of throwing
+      // The caller will handle this as empty results
+      return {
+        status: 'error',
+        statusCode: response.status,
+        message: 'Not found',
+        data: { animeList: [] }
+      };
     }
 
     const data = await response.json();
@@ -248,7 +248,7 @@ const providers = {
     getSchedule: () => fetchAnime('/samehadaku/schedule', 'samehadaku'),
     getGenres: () => fetchAnime('/samehadaku/genres', 'samehadaku'),
     getGenreAnime: (genreId) => fetchAnime(`/samehadaku/genres/${genreId}`, 'samehadaku'),
-    search: (keyword) => fetchAnime(`/samehadaku/search/${encodeURIComponent(keyword)}`, 'samehadaku'),
+    search: (keyword) => fetchAnime(`/samehadaku/search?q=${encodeURIComponent(keyword)}`, 'samehadaku'),
     getAnimeDetail: (animeId) => fetchAnime(`/samehadaku/anime/${animeId}`, 'samehadaku'),
     getEpisodeDetail: (episodeId) => fetchAnime(`/samehadaku/episode/${episodeId}`, 'samehadaku'),
     getStreamingServer: (serverId) => fetchAnime(`/samehadaku/server/${serverId}`, 'samehadaku'),
@@ -461,33 +461,47 @@ export const animeAPI = {
      return defaultProvider.getUnlimited();
    },
 
-  // Search across active providers (Otakudesu + Samehadaku)
-  searchAll: async (keyword) => {
-    const searchResults = {};
-    // Batasi hanya ke 2 provider utama yang dipakai di UI
-    const providerKeys = ['otakudesu', 'samehadaku'];
-    
-    for (const providerKey of providerKeys) {
+   // Search across active providers (Otakudesu + Samehadaku)
+   searchAll: async (keyword) => {
+     const searchResults = {};
+     const providerKeys = ['otakudesu', 'samehadaku'];
+     
+     for (const providerKey of providerKeys) {
        try {
          const providerAPI = providers[providerKey];
          if (providerAPI.search) {
            const results = await providerAPI.search(keyword);
-           searchResults[providerKey] = results;
+           
+           // Check if results indicate "not found" in various formats
+           const isNotFound = 
+             // Format: { statusCode: 404, ... }
+             (results?.statusCode === 404) ||
+             // Format: { status: "error", ... }  
+             (results?.status === 'error') ||
+             // Empty animeList
+             (Array.isArray(results?.animeList) && results.animeList.length === 0) ||
+             (Array.isArray(results?.data?.animeList) && results.data.animeList.length === 0) ||
+             // No data at all
+             (!results?.animeList && !results?.data?.animeList && !results?.data);
+           
+           if (isNotFound) {
+             searchResults[providerKey] = {
+               data: {
+                 animeList: [],
+               },
+             };
+           } else {
+             searchResults[providerKey] = results;
+           }
          }
        } catch (error) {
-        // Untuk 404 (data tidak ditemukan) dari provider tertentu,
-        // kita anggap saja sebagai "tidak ada hasil" tanpa dianggap error global.
-        if (error instanceof APIError && error.statusCode === 404) {
-          searchResults[providerKey] = {
-            data: {
-              animeList: [],
-            },
-          };
-          continue;
-        }
-
-        console.error(`Error searching in ${providerKey}:`, error.message);
-        searchResults[providerKey] = { error: error.message };
+         // Any error = treat as empty results for this provider
+         console.error(`Error searching in ${providerKey}:`, error.message);
+         searchResults[providerKey] = {
+           data: {
+             animeList: [],
+           },
+         };
        }
      }
      

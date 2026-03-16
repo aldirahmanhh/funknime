@@ -4,10 +4,48 @@ import { SkeletonAnimeGrid } from './Skeleton';
 import AnimeCard from './AnimeCard';
 import { useInfiniteScroll } from '../hooks/useInfiniteScroll';
 
+const normalizeKey = (item) => {
+  const raw = (item.title || item.name || '').toString().toLowerCase();
+  return raw.replace(/\s+/g, ' ').trim();
+};
+
+const mergeAnimeLists = (list1, list2) => {
+  const map = new Map();
+  
+  list1.forEach((a) => {
+    const key = normalizeKey(a);
+    map.set(key, { ...a, providers: ['otakudesu'], provider: 'otakudesu' });
+  });
+  
+  list2.forEach((a) => {
+    const key = normalizeKey(a);
+    const existing = map.get(key);
+    if (existing) {
+      map.set(key, { ...existing, providers: ['otakudesu', 'samehadaku'] });
+    } else {
+      map.set(key, { ...a, providers: ['samehadaku'], provider: 'samehadaku' });
+    }
+  });
+  
+  return Array.from(map.values());
+};
+
+const fetchCompletedData = async (page) => {
+  const [otakRes, sameRes] = await Promise.all([
+    animeAPI.getCompleted(page).catch(() => ({ data: { animeList: [] } })),
+    animeAPI.getCompletedSamehadaku().catch(() => ({ data: { animeList: [] } })),
+  ]);
+  
+  const otakList = otakRes?.data?.animeList || [];
+  const sameList = sameRes?.data?.animeList || [];
+  
+  return mergeAnimeLists(otakList, sameList);
+};
+
 const Completed = () => {
   const fetchCompleted = async (page) => {
-    const response = await animeAPI.getCompleted(page);
-    return response?.data?.animeList || [];
+    const merged = await fetchCompletedData(page);
+    return merged;
   };
 
   const {
@@ -30,7 +68,7 @@ const Completed = () => {
       <div className="anime-list-page main-container">
         <header className="page-header section section-neo">
           <h1 className="main-title text-gradient">Anime Selesai</h1>
-          <p className="subtitle">Kumpulan anime yang sudah tamat dari Otakudesu.</p>
+          <p className="subtitle">Kumpulan anime yang sudah tamat dari Otakudesu & Samehadaku.</p>
         </header>
         <section className="section section-neo">
           <SkeletonAnimeGrid count={12} />
@@ -58,22 +96,29 @@ const Completed = () => {
     <div className="anime-list-page main-container">
       <header className="page-header section section-neo">
         <h1 className="main-title text-gradient">Anime Selesai</h1>
-        <p className="subtitle">Anime yang sudah tamat dari Otakudesu.</p>
+        <p className="subtitle">Anime yang sudah tamat dari Otakudesu & Samehadaku.</p>
         {error && <p className="error-message">{error}</p>}
       </header>
 
       <section className="section section-neo">
         <div className="anime-grid">
-          {animes.map((anime, idx) => (
-            <AnimeCard
-              key={anime.animeId ?? anime.slug ?? idx}
-              anime={{ ...anime, provider: anime.provider ?? 'otakudesu' }}
-              index={idx}
-              innerRef={idx === animes.length - 1 ? lastElementRef : undefined}
-              statusOverride="Completed"
-              providerHint="Otakudesu"
-            />
-          ))}
+          {animes.map((anime, idx) => {
+            const providers = anime.providers || [anime.provider];
+            const hasOtak = providers.includes('otakudesu');
+            const hasSame = providers.includes('samehadaku');
+            const providerHint = hasOtak && hasSame ? 'Otakudesu & Samehadaku' : (hasSame ? 'Samehadaku' : 'Otakudesu');
+            
+            return (
+              <AnimeCard
+                key={anime.animeId ?? anime.slug ?? idx}
+                anime={{ ...anime, provider: anime.provider ?? 'otakudesu' }}
+                index={idx}
+                innerRef={idx === animes.length - 1 ? lastElementRef : undefined}
+                statusOverride="Completed"
+                providerHint={providerHint}
+              />
+            );
+          })}
         </div>
       </section>
 

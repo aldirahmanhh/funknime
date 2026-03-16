@@ -2,6 +2,33 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { animeAPI } from '../services/api';
 import { SkeletonAnimeGrid } from './Skeleton';
+import AnimeCard from './AnimeCard';
+
+const normalizeKey = (item) => {
+  const raw = (item.title || item.name || '').toString().toLowerCase();
+  return raw.replace(/\s+/g, ' ').trim();
+};
+
+const mergeAnimeLists = (list1, list2) => {
+  const map = new Map();
+  
+  list1.forEach((a) => {
+    const key = normalizeKey(a);
+    map.set(key, { ...a, providers: ['otakudesu'], provider: 'otakudesu' });
+  });
+  
+  list2.forEach((a) => {
+    const key = normalizeKey(a);
+    const existing = map.get(key);
+    if (existing) {
+      map.set(key, { ...existing, providers: ['otakudesu', 'samehadaku'] });
+    } else {
+      map.set(key, { ...a, providers: ['samehadaku'], provider: 'samehadaku' });
+    }
+  });
+  
+  return Array.from(map.values());
+};
 
 const AnimeList = () => {
   const [animes, setAnimes] = useState([]);
@@ -11,8 +38,19 @@ const AnimeList = () => {
   useEffect(() => {
     const fetchAnimeData = async () => {
       try {
-        const data = await animeAPI.getHome();
-        setAnimes(data);
+        const [homeRes, sameRes] = await Promise.all([
+          animeAPI.getHome().catch(() => ({ data: {} })),
+          animeAPI.getListSamehadaku().catch(() => ({ data: { animeList: [] } })),
+        ]);
+        
+        const otakList = [
+          ...(homeRes?.data?.ongoing?.animeList || []),
+          ...(homeRes?.data?.completed?.animeList || []),
+        ];
+        const sameList = sameRes?.data?.animeList || [];
+        
+        const merged = mergeAnimeLists(otakList, sameList);
+        setAnimes(merged);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -43,40 +81,22 @@ const AnimeList = () => {
     <div className="anime-list-page">
       <header className="page-header">
         <h1>Anime List</h1>
-        <p>Browse all available anime</p>
+        <p>Browse all available anime from Otakudesu & Samehadaku</p>
       </header>
       <div className="anime-grid">
         {animes.map((anime, idx) => {
-          const animeId = anime.animeId || anime.slug;
-          const title = anime.title || anime.name || `Anime ${idx + 1}`;
-          const posterUrl = anime.poster || `https://via.placeholder.com/200x280/2e2e2e/6366f1?text=${encodeURIComponent(title)}`;
+          const providers = anime.providers || [anime.provider];
+          const hasOtak = providers.includes('otakudesu');
+          const hasSame = providers.includes('samehadaku');
+          const providerHint = hasOtak && hasSame ? 'Otakudesu & Samehadaku' : (hasSame ? 'Samehadaku' : 'Otakudesu');
           
           return (
-            <Link
-              key={animeId || idx}
-              to={`/anime/${animeId}`}
-              className="anime-card card"
-              title={title}
-            >
-              <div className="card-image-wrapper">
-                <img
-                  src={posterUrl}
-                  alt={title}
-                  className="poster"
-                  loading="lazy"
-                />
-                <div className="card-overlay">
-                  <span className="play-icon">▶</span>
-                </div>
-              </div>
-              <div className="anime-info">
-                <h3>{title}</h3>
-                <div className="meta">
-                  {anime.episodes && <span className="episode-count">{anime.episodes} eps</span>}
-                  {anime.score && <span className="score">⭐ {anime.score}</span>}
-                </div>
-              </div>
-            </Link>
+            <AnimeCard
+              key={anime.animeId ?? anime.slug ?? idx}
+              anime={anime}
+              index={idx}
+              providerHint={providerHint}
+            />
           );
         })}
       </div>

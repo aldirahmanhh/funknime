@@ -20,7 +20,35 @@ const Watch = () => {
     const fetchEpisodeData = async () => {
       try {
         setLoading(true);
-        const data = await animeAPI.getEpisodeDetail(episodeId);
+        
+        // Try providers in order: otakudesu -> samehadaku -> stream
+        const providers = [
+          { fn: () => animeAPI.getEpisodeDetail(episodeId), name: 'otakudesu' },
+          { fn: () => animeAPI.getEpisodeDetailSamehadaku(episodeId), name: 'samehadaku' },
+          { fn: () => animeAPI.getEpisodeDetailStream(episodeId), name: 'stream' },
+        ];
+        
+        let data = null;
+        let usedProvider = null;
+        
+        for (const p of providers) {
+          try {
+            const result = await p.fn();
+            if (result?.data) {
+              data = result;
+              usedProvider = p.name;
+              break;
+            }
+          } catch (e) {
+            // Try next provider
+            continue;
+          }
+        }
+        
+        if (!data) {
+          throw new Error('Episode tidak ditemukan di semua provider');
+        }
+        
         const raw = data?.data || null;
 
         // Normalize common shapes from different providers
@@ -66,7 +94,7 @@ const Watch = () => {
               animeTitle: animeRes?.data?.title || normalized.title || episodeId,
               episodeTitle: normalized.title || episodeId,
               poster: animeRes?.data?.poster || animeRes?.data?.poster_url || '',
-              provider: location.state?.provider || 'otakudesu',
+              provider: usedProvider || location.state?.provider || 'otakudesu',
             });
           } catch (e) {
             console.log('Could not load anime details');

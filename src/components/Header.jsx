@@ -41,18 +41,35 @@ const Header = () => {
       }
       setSearchLoading(true);
       try {
-        const data = await animeAPI.search(debouncedQuery);
-        const root = data ?? {};
-        const list =
-          // Otakudesu-style: { data: { animeList: [] } }
-          root.data?.animeList ??
-          // Flattened list in data
-          (Array.isArray(root.data) ? root.data : null) ??
-          // Generic helpers / alternate shapes
-          root.results ??
-          root.animeList ??
-          [];
-        const results = Array.isArray(list) ? list.slice(0, 5) : [];
+        const data = await animeAPI.searchAll(debouncedQuery);
+        
+        // Combine results from both providers
+        const otakList = data?.otakudesu?.data?.animeList || data?.otakudesu?.animeList || [];
+        const sameList = data?.samehadaku?.data?.animeList || data?.samehadaku?.animeList || [];
+        
+        // Merge duplicates and add provider info
+        const normalizeKey = (item) => 
+          (item.title || item.name || '').toString().toLowerCase().replace(/\s+/g, ' ').trim();
+        
+        const map = new Map();
+        
+        otakList.forEach((a) => {
+          const key = normalizeKey(a);
+          map.set(key, { ...a, providers: ['otakudesu'] });
+        });
+        
+        sameList.forEach((a) => {
+          const key = normalizeKey(a);
+          const existing = map.get(key);
+          if (existing) {
+            map.set(key, { ...existing, providers: [...new Set([...existing.providers, 'samehadaku'])] });
+          } else {
+            map.set(key, { ...a, providers: ['samehadaku'] });
+          }
+        });
+        
+        const mergedList = Array.from(map.values());
+        const results = Array.isArray(mergedList) ? mergedList.slice(0, 5) : [];
         setSuggestions(results);
       } catch (err) {
         console.error('Search error:', err);
@@ -146,28 +163,36 @@ const Header = () => {
               {searchLoading && <div className="search-spinner" />}
               {showDropdown && suggestions.length > 0 && (
                 <div className="search-dropdown">
-                  {suggestions.map((anime, idx) => (
-                    <div
-                      key={anime.animeId ?? anime.slug ?? idx}
-                      className="search-suggestion"
-                      onClick={() => handleSuggestionClick(anime)}
-                      onMouseDown={(e) => e.preventDefault()}
-                    >
-                      <img
-                        src={anime.poster || anime.poster_url || undefined}
-                        alt={anime.title || anime.name || 'Anime'}
-                        className="suggestion-poster"
-                        onError={(e) => { e.target.src = 'https://via.placeholder.com/44x64/2e2e2e/666?text=?'; }}
-                      />
-                      <div className="suggestion-info">
-                        <div className="suggestion-title">{anime.title || anime.name}</div>
-                        <div className="suggestion-meta">
-                          {anime.episodes && <span>{anime.episodes} eps</span>}
-                          {anime.score && <span>⭐ {anime.score}</span>}
+                  {suggestions.map((anime, idx) => {
+                    const providers = anime.providers || [];
+                    const hasOtak = providers.includes('otakudesu');
+                    const hasSame = providers.includes('samehadaku');
+                    const providerHint = hasOtak && hasSame ? '2 Provider' : (hasSame ? 'Samehadaku' : 'Otakudesu');
+                    
+                    return (
+                      <div
+                        key={anime.animeId ?? anime.slug ?? idx}
+                        className="search-suggestion"
+                        onClick={() => handleSuggestionClick(anime)}
+                        onMouseDown={(e) => e.preventDefault()}
+                      >
+                        <img
+                          src={anime.poster || anime.poster_url || undefined}
+                          alt={anime.title || anime.name || 'Anime'}
+                          className="suggestion-poster"
+                          onError={(e) => { e.target.src = 'https://via.placeholder.com/44x64/2e2e2e/666?text=?'; }}
+                        />
+                        <div className="suggestion-info">
+                          <div className="suggestion-title">{anime.title || anime.name}</div>
+                          <div className="suggestion-meta">
+                            {providerHint && <span className="provider-badge">{providerHint}</span>}
+                            {anime.episodes && <span>{anime.episodes} eps</span>}
+                            {anime.score && <span>⭐ {anime.score}</span>}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>

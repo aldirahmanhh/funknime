@@ -145,11 +145,14 @@ const AnimeDetail = () => {
   })();
 
   const episodeList = anime.episodeList ?? [];
-  const getEpisodeNum = (ep) => ep.eps ?? ep.episodeNumber ?? ep.number ?? 9999;
-  const firstEpisode = episodeList.length > 0
-    ? episodeList.slice().sort((a, b) => getEpisodeNum(a) - getEpisodeNum(b))[0]
-    : null;
-  const firstEpisodeId = firstEpisode?.episodeId ?? episodeList[episodeList.length - 1]?.episodeId ?? episodeList[0]?.episodeId;
+  const getEpisodeNum = (ep) => {
+    const num = ep.eps ?? ep.episodeNumber ?? ep.number ?? ep.title;
+    const parsed = parseInt(num, 10);
+    return isNaN(parsed) ? 9999 : parsed;
+  };
+  const sortedEpisodeList = episodeList.slice().sort((a, b) => getEpisodeNum(a) - getEpisodeNum(b));
+  const firstEpisode = sortedEpisodeList.length > 0 ? sortedEpisodeList[0] : null;
+  const firstEpisodeId = firstEpisode?.episodeId;
 
   return (
     <div className="anime-detail main-container">
@@ -232,12 +235,12 @@ const AnimeDetail = () => {
         </section>
 
         <section className="episodes-section">
-          <h2>Daftar Episode ({anime.episodeList?.length || 0})</h2>
+          <h2>Daftar Episode ({sortedEpisodeList.length})</h2>
           <div className="episodes-grid">
-            {anime.episodeList?.map((episode, idx) => (
+            {sortedEpisodeList.map((episode, idx) => (
               <div key={episode.episodeId ?? idx} className="episode-card">
                 <div className="episode-info">
-                  <span className="episode-number">Episode {episode.eps ?? idx + 1}</span>
+                  <span className="episode-number">Episode {episode.eps ?? episode.title ?? episode.episodeNumber ?? idx + 1}</span>
                   {episode.date && <span className="episode-date">{episode.date}</span>}
                 </div>
                 <div className="episode-actions">
