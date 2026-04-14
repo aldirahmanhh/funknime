@@ -7,15 +7,14 @@ import Completed from './components/Completed'
 import DonghuaOngoing from './components/DonghuaOngoing'
 import DonghuaCompleted from './components/DonghuaCompleted'
 import DonghuaDetail from './components/DonghuaDetail'
-import DonghuaSearch from './components/DonghuaSearch'
 import DonghuaGenres from './components/DonghuaGenres'
 import DonghuaGenreFilter from './components/DonghuaGenreFilter'
 import DonghuaAZList from './components/DonghuaAZList'
+import UnifiedSearch from './components/UnifiedSearch'
 import AnimeDetail from './components/AnimeDetail'
 import Watch from './components/Watch'
 import Genres from './components/Genres'
 import AZList from './components/AZList'
-import Search from './components/Search'
 import Schedule from './components/Schedule'
 import WatchHistory from './components/WatchHistory'
 import ThemeSelector from './components/ThemeSelector'
@@ -40,7 +39,6 @@ function App() {
           <Route path="/completed" element={<Completed />} />
           <Route path="/donghua-ongoing" element={<DonghuaOngoing />} />
           <Route path="/donghua-completed" element={<DonghuaCompleted />} />
-          <Route path="/donghua-search" element={<DonghuaSearch />} />
           <Route path="/donghua-genres" element={<DonghuaGenres />} />
           <Route path="/donghua-genre/:slug" element={<DonghuaGenreFilter />} />
           <Route path="/donghua-az" element={<DonghuaAZList />} />
@@ -49,8 +47,7 @@ function App() {
           <Route path="/az-list" element={<AZList />} />
           <Route path="/schedule" element={<Schedule />} />
           <Route path="/history" element={<WatchHistory />} />
-          <Route path="/search" element={<Search />} />
-          <Route path="/search/:query" element={<Search />} />
+          <Route path="/search" element={<UnifiedSearch />} />
           <Route path="/anime/:animeId" element={<AnimeDetail />} />
           <Route path="/anime/:provider/:animeId" element={<AnimeDetail />} />
           <Route path="/watch/:episodeId" element={<Watch />} />

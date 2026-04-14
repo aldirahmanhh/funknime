@@ -25,7 +25,10 @@ const DonghuaSearch = () => {
       setLoading(true);
       setError(null);
       const response = await animeAPI.searchDonghua(searchQuery);
-      const donghuaList = response?.data || [];
+      
+      // Handle response structure: response.data is the array
+      const donghuaList = Array.isArray(response?.data) ? response.data : [];
+      
       setResults(donghuaList);
     } catch (err) {
       setError(err?.message ?? 'Gagal mencari donghua');

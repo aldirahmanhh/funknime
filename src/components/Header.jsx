@@ -111,7 +111,6 @@ const Header = () => {
       submenu: [
         { to: '/ongoing', label: 'Ongoing' },
         { to: '/completed', label: 'Completed' },
-        { to: '/search', label: 'Search' },
       ]
     },
     { 
@@ -119,7 +118,6 @@ const Header = () => {
       submenu: [
         { to: '/donghua-ongoing', label: 'Ongoing' },
         { to: '/donghua-completed', label: 'Completed' },
-        { to: '/donghua-search', label: 'Search' },
         { to: '/donghua-genres', label: 'Genres' },
         { to: '/donghua-az', label: 'A-Z List' },
       ]
