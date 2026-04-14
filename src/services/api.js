@@ -729,4 +729,46 @@ export const animeAPI = {
   getDonghuaBySeason: async (year) => {
     return fetchAnime(`/donghua/seasons/${year}`, 'donghua');
   },
+
+  // ========== DRACIN API (STREAM) ==========
+  
+  // Get latest episodes
+  getDracinLatest: async (page = 1) => {
+    return fetchAnime(`/stream/latest/${page}`, 'dracin');
+  },
+
+  // Get anime list
+  getDracinList: async () => {
+    return fetchAnime('/stream/list', 'dracin');
+  },
+
+  // Get popular anime
+  getDracinPopular: async () => {
+    return fetchAnime('/stream/popular', 'dracin');
+  },
+
+  // Get all genres
+  getDracinGenres: async () => {
+    return fetchAnime('/stream/genres', 'dracin');
+  },
+
+  // Get anime by genre
+  getDracinByGenre: async (slug, page = 1) => {
+    return fetchAnime(`/stream/genres/${slug}/${page}`, 'dracin');
+  },
+
+  // Search anime
+  searchDracin: async (keyword) => {
+    return fetchAnime(`/stream/search/${encodeURIComponent(keyword)}`, 'dracin');
+  },
+
+  // Get anime detail
+  getDracinDetail: async (slug) => {
+    return fetchAnime(`/stream/anime/${slug}`, 'dracin');
+  },
+
+  // Get episode streaming links
+  getDracinEpisode: async (slug) => {
+    return fetchAnime(`/stream/episode/${slug}`, 'dracin');
+  },
 };
