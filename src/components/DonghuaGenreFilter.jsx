@@ -59,7 +59,7 @@ const DonghuaGenreFilter = () => {
       </nav>
 
       <header className="page-header">
-        <h1 className="main-title">🎭 {genreName}</h1>
+        <h1 className="main-title">{genreName}</h1>
         <p className="subtitle">{donghua.length} donghua</p>
       </header>
 

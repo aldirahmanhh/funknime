@@ -90,7 +90,7 @@ const DonghuaGenres = () => {
   return (
     <div className="main-container">
       <header className="page-header">
-        <h1 className="main-title">🎭 Genre Donghua</h1>
+        <h1 className="main-title">Genre Donghua</h1>
         <p className="subtitle">{filteredList.length} kategori</p>
       </header>
 

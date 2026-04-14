@@ -36,7 +36,7 @@ const DonghuaAZList = () => {
   return (
     <div className="main-container">
       <header className="page-header">
-        <h1 className="main-title">🔤 Donghua A-Z</h1>
+        <h1 className="main-title">Donghua A-Z</h1>
         <p className="subtitle">Browse by alphabet</p>
       </header>
 

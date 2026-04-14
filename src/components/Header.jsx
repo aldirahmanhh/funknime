@@ -105,10 +105,9 @@ const Header = () => {
   };
 
   const navLinks = [
-    { to: '/', label: 'Home', icon: '🏠' },
+    { to: '/', label: 'Home' },
     { 
-      label: 'Anime', 
-      icon: '📺',
+      label: 'Anime',
       submenu: [
         { to: '/ongoing', label: 'Ongoing' },
         { to: '/completed', label: 'Completed' },
@@ -116,8 +115,7 @@ const Header = () => {
       ]
     },
     { 
-      label: 'Donghua', 
-      icon: '🐉',
+      label: 'Donghua',
       submenu: [
         { to: '/donghua-ongoing', label: 'Ongoing' },
         { to: '/donghua-completed', label: 'Completed' },
@@ -126,9 +124,9 @@ const Header = () => {
         { to: '/donghua-az', label: 'A-Z List' },
       ]
     },
-    { to: '/genres', label: 'Genres', icon: '🎭' },
-    { to: '/schedule', label: 'Schedule', icon: '📅' },
-    { to: '/history', label: 'History', icon: '📜' },
+    { to: '/genres', label: 'Genres' },
+    { to: '/schedule', label: 'Schedule' },
+    { to: '/history', label: 'History' },
   ];
 
   return (
@@ -148,7 +146,6 @@ const Header = () => {
               return (
                 <div key={idx} className="nav-dropdown">
                   <span className="nav-link dropdown-trigger">
-                    {link.icon && <span className="nav-icon">{link.icon}</span>}
                     {link.label}
                     <span className="dropdown-arrow">▼</span>
                   </span>
@@ -175,7 +172,6 @@ const Header = () => {
                 className={`nav-link ${location.pathname === link.to ? 'active' : ''}`}
                 onClick={closeMobileMenu}
               >
-                {link.icon && <span className="nav-icon">{link.icon}</span>}
                 {link.label}
               </Link>
             );

@@ -61,7 +61,7 @@ const DonghuaOngoing = () => {
   return (
     <div className="main-container">
       <header className="page-header">
-        <h1 className="main-title">🐉 Donghua Ongoing</h1>
+        <h1 className="main-title">Donghua Ongoing</h1>
         <p className="subtitle">Donghua yang sedang tayang - {donghua.length} judul</p>
       </header>
 

@@ -44,7 +44,7 @@ const DonghuaSearch = () => {
   return (
     <div className="main-container">
       <header className="page-header">
-        <h1 className="main-title">🔍 Cari Donghua</h1>
+        <h1 className="main-title">Cari Donghua</h1>
       </header>
 
       <form onSubmit={handleSubmit} className="search-form">

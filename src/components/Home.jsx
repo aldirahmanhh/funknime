@@ -11,6 +11,7 @@ const DAY_ORDER = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu
 
 const Home = () => {
   const [homeData, setHomeData] = useState(null);
+  const [donghuaData, setDonghuaData] = useState(null);
   const [scheduleData, setScheduleData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -24,11 +25,15 @@ const Home = () => {
           sameOngoingRes,
           sameCompletedRes,
           scheduleRes,
+          donghuaOngoingRes,
+          donghuaCompletedRes,
         ] = await Promise.all([
           animeAPI.getHome(),
           animeAPI.getOngoingSamehadaku().catch(() => null),
           animeAPI.getCompletedSamehadaku().catch(() => null),
           animeAPI.getSchedule().catch(() => null),
+          animeAPI.getDonghuaOngoing(1).catch(() => null),
+          animeAPI.getDonghuaCompleted(1).catch(() => null),
         ]);
 
         const otakOngoing = homeRes?.data?.ongoing?.animeList || [];
@@ -91,6 +96,15 @@ const Home = () => {
           completed: mergedCompleted,
         });
 
+        // Donghua data
+        const donghuaOngoing = donghuaOngoingRes?.ongoing_donghua || [];
+        const donghuaCompleted = donghuaCompletedRes?.completed_donghua || [];
+        
+        setDonghuaData({
+          ongoing: donghuaOngoing,
+          completed: donghuaCompleted,
+        });
+
         if (scheduleRes?.data) setScheduleData(scheduleRes);
       } catch (err) {
         setError(err?.message ?? 'Gagal memuat data');
@@ -129,7 +143,6 @@ const Home = () => {
   if (error) {
     return (
       <div className="error-container main-container">
-        <div className="error-icon" aria-hidden>⚠️</div>
         <p className="error-message">Gagal memuat anime: {error}</p>
         <p className="error-hint">Periksa koneksi internet atau coba lagi nanti.</p>
         <button type="button" className="btn btn-primary" onClick={() => window.location.reload()}>
@@ -142,10 +155,29 @@ const Home = () => {
 
   const ongoing = homeData?.ongoing || [];
   const completed = homeData?.completed || [];
+  const donghuaOngoing = donghuaData?.ongoing || [];
+  const donghuaCompleted = donghuaData?.completed || [];
   const days = Array.isArray(scheduleData?.data) ? scheduleData.data : [];
 
-  const buildRailItems = (animeList, statusOverride) =>
+  const buildRailItems = (animeList, statusOverride, isDonghua = false) =>
     (animeList || []).map((anime, idx) => {
+      if (isDonghua) {
+        return (
+          <div className="home-rail-card" key={anime.slug ?? idx}>
+            <AnimeCard
+              anime={{
+                ...anime,
+                animeId: anime.slug,
+                provider: 'donghua',
+              }}
+              index={idx}
+              statusOverride={statusOverride}
+              providerHint="Donghua"
+            />
+          </div>
+        );
+      }
+
       const providers = anime.providers || (anime.provider ? [anime.provider] : []);
       const hasOtak = providers.includes('otakudesu');
       const hasSame = providers.includes('samehadaku');
@@ -170,7 +202,6 @@ const Home = () => {
     });
 
   const popularList = ongoing.length >= 4 ? ongoing : [...ongoing, ...completed].slice(0, 10);
-  const featured = popularList[0] || ongoing[0] || completed[0] || null;
 
   return (
     <div className="home-container main-container">
@@ -178,7 +209,7 @@ const Home = () => {
         <div className="home-hero-copy">
           <h1 className="main-title text-gradient" data-text="FUNKNIME">FUNKNIME</h1>
           <p className="subtitle">
-            Streaming anime sub Indo dengan katalog gabungan Otakudesu &amp; Samehadaku.
+            Streaming anime & donghua sub Indo dengan katalog gabungan Otakudesu & Samehadaku.
           </p>
           <div className="home-hero-actions">
             <Link to="/search" className="btn btn-primary">Mulai cari anime</Link>
@@ -225,7 +256,7 @@ const Home = () => {
                     <h3>{item.animeTitle}</h3>
                     <div className="meta">
                       <span className="episode-count">
-                        🎬 {item.episodeTitle || `Episode ${item.episodeId}`}
+                        {item.episodeTitle || `Episode ${item.episodeId}`}
                       </span>
                     </div>
                   </div>
@@ -239,7 +270,7 @@ const Home = () => {
       {ongoing.length > 0 && (
         <section className="section home-rail">
           <div className="section-header home-rail-header">
-            <h2 className="section-title">Sedang tayang</h2>
+            <h2 className="section-title">Anime sedang tayang</h2>
             <Link to="/ongoing" className="view-all">Lihat semua</Link>
           </div>
           <div className="home-rail-scroll">
@@ -248,14 +279,38 @@ const Home = () => {
         </section>
       )}
 
+      {donghuaOngoing.length > 0 && (
+        <section className="section home-rail">
+          <div className="section-header home-rail-header">
+            <h2 className="section-title">Donghua sedang tayang</h2>
+            <Link to="/donghua-ongoing" className="view-all">Lihat semua</Link>
+          </div>
+          <div className="home-rail-scroll">
+            {buildRailItems(donghuaOngoing, 'Ongoing', true)}
+          </div>
+        </section>
+      )}
+
       {completed.length > 0 && (
         <section className="section home-rail">
           <div className="section-header home-rail-header">
-            <h2 className="section-title">Baru selesai</h2>
+            <h2 className="section-title">Anime baru selesai</h2>
             <Link to="/completed" className="view-all">Lihat semua</Link>
           </div>
           <div className="home-rail-scroll">
             {buildRailItems(completed, 'Completed')}
+          </div>
+        </section>
+      )}
+
+      {donghuaCompleted.length > 0 && (
+        <section className="section home-rail">
+          <div className="section-header home-rail-header">
+            <h2 className="section-title">Donghua baru selesai</h2>
+            <Link to="/donghua-completed" className="view-all">Lihat semua</Link>
+          </div>
+          <div className="home-rail-scroll">
+            {buildRailItems(donghuaCompleted, 'Completed', true)}
           </div>
         </section>
       )}

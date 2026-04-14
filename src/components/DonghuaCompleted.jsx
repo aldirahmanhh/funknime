@@ -61,7 +61,7 @@ const DonghuaCompleted = () => {
   return (
     <div className="main-container">
       <header className="page-header">
-        <h1 className="main-title">🐉 Donghua Completed</h1>
+        <h1 className="main-title">Donghua Completed</h1>
         <p className="subtitle">Donghua yang sudah tamat - {donghua.length} judul</p>
       </header>
 
