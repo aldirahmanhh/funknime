@@ -1558,15 +1558,6 @@ main {
     padding-bottom: 120px !important;
   }
   
-  /* Fix nav menu z-index */
-  .nav-menu {
-    z-index: 1400;
-  }
-  
-  .nav-overlay {
-    z-index: 1350;
-  }
-  
   /* Fix search dropdown on mobile */
   .header .search-container .search-dropdown {
     max-height: 240px;

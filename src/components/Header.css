@@ -312,13 +312,14 @@
 .nav-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.75);
   z-index: 10000;
   border: none;
   cursor: pointer;
   animation: fadeIn 0.2s ease-out;
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
+  isolation: isolate;
 }
 
 @keyframes fadeIn {
@@ -358,12 +359,13 @@
      padding: var(--space-5);
      flex-direction: column;
      gap: var(--space-3);
-     box-shadow: 6px 0 0 var(--color-border);
+     box-shadow: 6px 0 0 var(--color-border), 0 0 0 9999px rgba(0, 0, 0, 0.75);
      z-index: 10001;
      align-items: stretch;
      justify-content: flex-start;
      overflow-y: auto;
      -webkit-overflow-scrolling: touch;
+     isolation: isolate;
    }
 
   .nav-menu.open {
