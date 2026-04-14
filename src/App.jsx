@@ -4,6 +4,8 @@ import Header from './components/Header'
 import './App.css'
 import Ongoing from './components/Ongoing'
 import Completed from './components/Completed'
+import DonghuaOngoing from './components/DonghuaOngoing'
+import DonghuaCompleted from './components/DonghuaCompleted'
 import AnimeDetail from './components/AnimeDetail'
 import Watch from './components/Watch'
 import Genres from './components/Genres'
@@ -31,6 +33,8 @@ function App() {
           <Route path="/" element={<Home />} />
           <Route path="/ongoing" element={<Ongoing />} />
           <Route path="/completed" element={<Completed />} />
+          <Route path="/donghua-ongoing" element={<DonghuaOngoing />} />
+          <Route path="/donghua-completed" element={<DonghuaCompleted />} />
           <Route path="/genres" element={<Genres />} />
           <Route path="/az-list" element={<AZList />} />
           <Route path="/schedule" element={<Schedule />} />

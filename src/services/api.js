@@ -667,4 +667,66 @@ export const animeAPI = {
       
       return results;
     },
+
+  // ========== DONGHUA API ==========
+  
+  // Get Donghua home page
+  getDonghuaHome: async (page = 1) => {
+    return fetchAnime(`/donghua/home/${page}`, 'donghua');
+  },
+
+  // Get Donghua ongoing
+  getDonghuaOngoing: async (page = 1) => {
+    return fetchAnime(`/donghua/ongoing/${page}`, 'donghua');
+  },
+
+  // Get Donghua completed
+  getDonghuaCompleted: async (page = 1) => {
+    return fetchAnime(`/donghua/completed/${page}`, 'donghua');
+  },
+
+  // Get Donghua latest
+  getDonghuaLatest: async (page = 1) => {
+    return fetchAnime(`/donghua/latest/${page}`, 'donghua');
+  },
+
+  // Get Donghua schedule
+  getDonghuaSchedule: async () => {
+    return fetchAnime('/donghua/schedule', 'donghua');
+  },
+
+  // Search Donghua
+  searchDonghua: async (keyword) => {
+    return fetchAnime(`/donghua/search/${encodeURIComponent(keyword)}`, 'donghua');
+  },
+
+  // Get Donghua detail
+  getDonghuaDetail: async (slug) => {
+    return fetchAnime(`/donghua/detail/${slug}`, 'donghua');
+  },
+
+  // Get Donghua episode
+  getDonghuaEpisode: async (slug) => {
+    return fetchAnime(`/donghua/episode/${slug}`, 'donghua');
+  },
+
+  // Get Donghua genres
+  getDonghuaGenres: async () => {
+    return fetchAnime('/donghua/genres', 'donghua');
+  },
+
+  // Get Donghua by genre
+  getDonghuaByGenre: async (slug, page = 1) => {
+    return fetchAnime(`/donghua/genres/${slug}/${page}`, 'donghua');
+  },
+
+  // Get Donghua A-Z list
+  getDonghuaAZList: async (letter, page = 1) => {
+    return fetchAnime(`/donghua/az-list/${letter}/${page}`, 'donghua');
+  },
+
+  // Get Donghua by season/year
+  getDonghuaBySeason: async (year) => {
+    return fetchAnime(`/donghua/seasons/${year}`, 'donghua');
+  },
 };
