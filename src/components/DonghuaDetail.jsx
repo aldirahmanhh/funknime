@@ -73,8 +73,13 @@ const DonghuaDetail = () => {
   const synopsis = donghua.synopsis || donghua.description || 'Sinopsis tidak tersedia.';
   const status = donghua.status || 'Unknown';
   const type = donghua.type || 'Donghua';
+  const rating = donghua.rating || null;
+  const studio = donghua.studio || null;
+  const released = donghua.released || donghua.released_on || null;
+  const duration = donghua.duration || null;
+  const episodesCount = donghua.episodes_count || null;
   const genres = donghua.genres || donghua.genreList || [];
-  const episodes = donghua.episodes || donghua.episodeList || [];
+  const episodes = donghua.episodes_list || donghua.episodes || donghua.episodeList || [];
 
   return (
     <div className="anime-detail main-container">
@@ -102,8 +107,11 @@ const DonghuaDetail = () => {
             <div className="info-grid">
               <div className="info-item"><strong>Status:</strong> {status}</div>
               <div className="info-item"><strong>Type:</strong> {type}</div>
-              {donghua.year && <div className="info-item"><strong>Year:</strong> {donghua.year}</div>}
-              {donghua.studio && <div className="info-item"><strong>Studio:</strong> {donghua.studio}</div>}
+              {rating && <div className="info-item"><strong>Rating:</strong> ⭐ {rating}</div>}
+              {episodesCount && <div className="info-item"><strong>Episodes:</strong> {episodesCount}</div>}
+              {released && <div className="info-item"><strong>Released:</strong> {released}</div>}
+              {duration && <div className="info-item"><strong>Duration:</strong> {duration}</div>}
+              {studio && <div className="info-item"><strong>Studio:</strong> {studio}</div>}
             </div>
 
             {Array.isArray(genres) && genres.length > 0 && (
@@ -130,24 +138,27 @@ const DonghuaDetail = () => {
           <section className="episodes-section">
             <h2>Daftar Episode ({episodes.length})</h2>
             <div className="episodes-grid">
-              {episodes.map((episode, idx) => (
-                <div key={episode.slug || episode.episodeId || idx} className="episode-card">
-                  <div className="episode-info">
-                    <span className="episode-number">
-                      Episode {episode.number || episode.eps || episode.title || idx + 1}
-                    </span>
-                    {episode.date && <span className="episode-date">{episode.date}</span>}
+              {episodes.map((episode, idx) => {
+                const episodeTitle = episode.episode || episode.title || `Episode ${idx + 1}`;
+                const episodeSlug = episode.slug || episode.episodeId || '';
+                
+                return (
+                  <div key={episodeSlug || idx} className="episode-card">
+                    <div className="episode-info">
+                      <span className="episode-number">{episodeTitle}</span>
+                      {episode.date && <span className="episode-date">{episode.date}</span>}
+                    </div>
+                    <div className="episode-actions">
+                      <Link 
+                        to={`/watch/${episodeSlug}`} 
+                        className="watch-btn btn btn-secondary"
+                      >
+                        Nonton
+                      </Link>
+                    </div>
                   </div>
-                  <div className="episode-actions">
-                    <Link 
-                      to={`/watch/${episode.slug || episode.episodeId}`} 
-                      className="watch-btn btn btn-secondary"
-                    >
-                      Nonton
-                    </Link>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </section>
         )}
