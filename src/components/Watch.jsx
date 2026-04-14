@@ -22,8 +22,9 @@ const Watch = () => {
         setLoading(true);
         setError(null);
         
-        // Try providers in order: otakudesu -> samehadaku -> stream
+        // Try providers in order: donghua -> otakudesu -> samehadaku -> stream
         const providers = [
+          { fn: () => animeAPI.getDonghuaEpisode(episodeId), name: 'donghua' },
           { fn: () => animeAPI.getEpisodeDetail(episodeId), name: 'otakudesu' },
           { fn: () => animeAPI.getEpisodeDetailSamehadaku(episodeId), name: 'samehadaku' },
           { fn: () => animeAPI.getEpisodeDetailStream(episodeId), name: 'stream' },
@@ -39,7 +40,13 @@ const Watch = () => {
             const result = await p.fn();
             
             // Check if result has valid data
-            if (result?.data && (result.data.defaultStreamingUrl || result.data.servers || result.data.server)) {
+            // Donghua has streaming.servers, anime has defaultStreamingUrl/servers/server
+            const hasValidData = result?.streaming?.servers || 
+                                result?.data?.defaultStreamingUrl || 
+                                result?.data?.servers || 
+                                result?.data?.server;
+            
+            if (hasValidData) {
               data = result;
               usedProvider = p.name;
               console.log(`[Watch] Success with provider: ${p.name}`);
@@ -55,10 +62,54 @@ const Watch = () => {
           }
         }
         
-        if (!data || !data.data) {
+        if (!data) {
           throw new Error(lastError?.message || 'Episode tidak ditemukan di semua provider. Mungkin episode ini belum tersedia atau sudah dihapus.');
         }
         
+        // Handle donghua response structure
+        if (usedProvider === 'donghua' && data.streaming) {
+          const donghuaData = {
+            episode: data.episode,
+            defaultStreamingUrl: data.streaming.main_url?.url || data.streaming.servers[0]?.url,
+            server: {
+              qualities: [{
+                title: 'Streaming',
+                serverList: data.streaming.servers.map(s => ({
+                  title: s.name,
+                  url: s.url,
+                })),
+              }],
+            },
+            navigation: data.navigation,
+            donghua_details: data.donghua_details,
+            episodes_list: data.episodes_list,
+          };
+          
+          setEpisodeData(donghuaData);
+          setVideoUrl(donghuaData.defaultStreamingUrl);
+          
+          if (donghuaData.server.qualities.length > 0) {
+            setSelectedQuality('Streaming');
+            setSelectedServer(donghuaData.server.qualities[0].serverList[0]);
+          }
+          
+          // Save to watch history
+          if (data.donghua_details) {
+            addToWatchHistory({
+              animeId: data.donghua_details.slug,
+              episodeId,
+              animeTitle: data.donghua_details.title,
+              episodeTitle: data.episode,
+              poster: data.donghua_details.poster,
+              provider: 'donghua',
+            });
+          }
+          
+          setLoading(false);
+          return;
+        }
+        
+        // Handle anime response structure (existing code)
         const raw = data?.data || null;
 
         // Normalize common shapes from different providers
@@ -391,7 +442,18 @@ const Watch = () => {
       </div>
 
       <div className="video-navigation">
-        {episodeData?.hasPrevEpisode && (
+        {/* Donghua previous */}
+        {episodeData?.navigation?.previous_episode && (
+          <Link
+            to={`/watch/${episodeData.navigation.previous_episode.slug}`}
+            className="nav-btn prev btn btn-secondary"
+          >
+            ← Episode Sebelumnya
+          </Link>
+        )}
+        
+        {/* Anime previous */}
+        {episodeData?.hasPrevEpisode && !episodeData?.navigation && (
           <Link
             to={`/watch/${episodeData.prevEpisode.episodeId}`}
             className="nav-btn prev btn btn-secondary"
@@ -399,7 +461,19 @@ const Watch = () => {
             ← Episode Sebelumnya
           </Link>
         )}
-        {episodeData?.hasNextEpisode && (
+        
+        {/* Donghua next */}
+        {episodeData?.navigation?.next_episode && (
+          <Link
+            to={`/watch/${episodeData.navigation.next_episode.slug}`}
+            className="nav-btn next btn btn-primary"
+          >
+            Episode Berikutnya →
+          </Link>
+        )}
+        
+        {/* Anime next */}
+        {episodeData?.hasNextEpisode && !episodeData?.navigation && (
           <Link
             to={`/watch/${episodeData.nextEpisode.episodeId}`}
             className="nav-btn next btn btn-primary"
