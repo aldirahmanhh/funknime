@@ -14,10 +14,16 @@ const DonghuaCompleted = () => {
     const fetchDonghua = async () => {
       try {
         setLoading(true);
-        const data = await animeAPI.getDonghuaCompleted(page);
+        const response = await animeAPI.getDonghuaHome(page);
+        
+        console.log('[DonghuaCompleted] API Response:', response);
         
         // Extract donghua list from response
-        const donghuaList = data?.data?.completed_donghua || data?.data?.completed || data?.data || [];
+        // Response structure: { status, creator, completed_donghua: [...] }
+        const donghuaList = response?.completed_donghua || response?.data?.completed_donghua || [];
+        
+        console.log('[DonghuaCompleted] Extracted list:', donghuaList);
+        
         setDonghua(Array.isArray(donghuaList) ? donghuaList : []);
       } catch (err) {
         setError(err?.message ?? 'Gagal memuat donghua completed');
