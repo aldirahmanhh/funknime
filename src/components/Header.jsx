@@ -105,16 +105,30 @@ const Header = () => {
   };
 
   const navLinks = [
-    { to: '/', label: 'Home' },
-    { to: '/ongoing', label: 'Anime Ongoing' },
-    { to: '/completed', label: 'Anime Completed' },
-    { to: '/donghua-ongoing', label: 'Donghua Ongoing' },
-    { to: '/donghua-completed', label: 'Donghua Completed' },
-    { to: '/donghua-search', label: 'Cari Donghua' },
-    { to: '/genres', label: 'Genres' },
-    { to: '/az-list', label: 'A-Z' },
-    { to: '/schedule', label: 'Schedule' },
-    { to: '/history', label: 'Riwayat' },
+    { to: '/', label: 'Home', icon: '🏠' },
+    { 
+      label: 'Anime', 
+      icon: '📺',
+      submenu: [
+        { to: '/ongoing', label: 'Ongoing' },
+        { to: '/completed', label: 'Completed' },
+        { to: '/search', label: 'Search' },
+      ]
+    },
+    { 
+      label: 'Donghua', 
+      icon: '🐉',
+      submenu: [
+        { to: '/donghua-ongoing', label: 'Ongoing' },
+        { to: '/donghua-completed', label: 'Completed' },
+        { to: '/donghua-search', label: 'Search' },
+        { to: '/donghua-genres', label: 'Genres' },
+        { to: '/donghua-az', label: 'A-Z List' },
+      ]
+    },
+    { to: '/genres', label: 'Genres', icon: '🎭' },
+    { to: '/schedule', label: 'Schedule', icon: '📅' },
+    { to: '/history', label: 'History', icon: '📜' },
   ];
 
   return (
@@ -129,16 +143,43 @@ const Header = () => {
         </div>
 
         <div className={`nav-menu ${mobileMenuOpen ? 'open' : ''}`} role="navigation">
-          {navLinks.map(({ to, label }) => (
-            <Link
-              key={to}
-              to={to}
-              className={`nav-link ${location.pathname === to ? 'active' : ''}`}
-              onClick={closeMobileMenu}
-            >
-              {label}
-            </Link>
-          ))}
+          {navLinks.map((link, idx) => {
+            if (link.submenu) {
+              return (
+                <div key={idx} className="nav-dropdown">
+                  <span className="nav-link dropdown-trigger">
+                    {link.icon && <span className="nav-icon">{link.icon}</span>}
+                    {link.label}
+                    <span className="dropdown-arrow">▼</span>
+                  </span>
+                  <div className="dropdown-menu">
+                    {link.submenu.map((sublink) => (
+                      <Link
+                        key={sublink.to}
+                        to={sublink.to}
+                        className={`dropdown-item ${location.pathname === sublink.to ? 'active' : ''}`}
+                        onClick={closeMobileMenu}
+                      >
+                        {sublink.label}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              );
+            }
+            
+            return (
+              <Link
+                key={link.to}
+                to={link.to}
+                className={`nav-link ${location.pathname === link.to ? 'active' : ''}`}
+                onClick={closeMobileMenu}
+              >
+                {link.icon && <span className="nav-icon">{link.icon}</span>}
+                {link.label}
+              </Link>
+            );
+          })}
         </div>
 
         <div className="nav-actions">

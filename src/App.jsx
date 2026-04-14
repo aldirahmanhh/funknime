@@ -8,6 +8,9 @@ import DonghuaOngoing from './components/DonghuaOngoing'
 import DonghuaCompleted from './components/DonghuaCompleted'
 import DonghuaDetail from './components/DonghuaDetail'
 import DonghuaSearch from './components/DonghuaSearch'
+import DonghuaGenres from './components/DonghuaGenres'
+import DonghuaGenreFilter from './components/DonghuaGenreFilter'
+import DonghuaAZList from './components/DonghuaAZList'
 import AnimeDetail from './components/AnimeDetail'
 import Watch from './components/Watch'
 import Genres from './components/Genres'
@@ -38,6 +41,9 @@ function App() {
           <Route path="/donghua-ongoing" element={<DonghuaOngoing />} />
           <Route path="/donghua-completed" element={<DonghuaCompleted />} />
           <Route path="/donghua-search" element={<DonghuaSearch />} />
+          <Route path="/donghua-genres" element={<DonghuaGenres />} />
+          <Route path="/donghua-genre/:slug" element={<DonghuaGenreFilter />} />
+          <Route path="/donghua-az" element={<DonghuaAZList />} />
           <Route path="/donghua/:slug" element={<DonghuaDetail />} />
           <Route path="/genres" element={<Genres />} />
           <Route path="/az-list" element={<AZList />} />
