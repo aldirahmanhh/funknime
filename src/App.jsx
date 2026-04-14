@@ -6,6 +6,7 @@ import Ongoing from './components/Ongoing'
 import Completed from './components/Completed'
 import DonghuaOngoing from './components/DonghuaOngoing'
 import DonghuaCompleted from './components/DonghuaCompleted'
+import DonghuaDetail from './components/DonghuaDetail'
 import AnimeDetail from './components/AnimeDetail'
 import Watch from './components/Watch'
 import Genres from './components/Genres'
@@ -35,6 +36,7 @@ function App() {
           <Route path="/completed" element={<Completed />} />
           <Route path="/donghua-ongoing" element={<DonghuaOngoing />} />
           <Route path="/donghua-completed" element={<DonghuaCompleted />} />
+          <Route path="/donghua/:slug" element={<DonghuaDetail />} />
           <Route path="/genres" element={<Genres />} />
           <Route path="/az-list" element={<AZList />} />
           <Route path="/schedule" element={<Schedule />} />

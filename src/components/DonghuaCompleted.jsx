@@ -14,13 +14,12 @@ const DonghuaCompleted = () => {
     const fetchDonghua = async () => {
       try {
         setLoading(true);
-        const response = await animeAPI.getDonghuaHome(page);
+        const response = await animeAPI.getDonghuaCompleted(page);
         
         console.log('[DonghuaCompleted] API Response:', response);
         
-        // Extract donghua list from response
         // Response structure: { status, creator, completed_donghua: [...] }
-        const donghuaList = response?.completed_donghua || response?.data?.completed_donghua || [];
+        const donghuaList = response?.completed_donghua || [];
         
         console.log('[DonghuaCompleted] Extracted list:', donghuaList);
         

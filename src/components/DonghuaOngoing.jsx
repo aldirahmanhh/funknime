@@ -14,13 +14,12 @@ const DonghuaOngoing = () => {
     const fetchDonghua = async () => {
       try {
         setLoading(true);
-        const response = await animeAPI.getDonghuaHome(page);
+        const response = await animeAPI.getDonghuaOngoing(page);
         
         console.log('[DonghuaOngoing] API Response:', response);
         
-        // Extract donghua list from response
-        // Response structure: { status, creator, latest_release: [...] }
-        const donghuaList = response?.latest_release || response?.data?.latest_release || [];
+        // Response structure: { status, creator, ongoing_donghua: [...] }
+        const donghuaList = response?.ongoing_donghua || [];
         
         console.log('[DonghuaOngoing] Extracted list:', donghuaList);
         
