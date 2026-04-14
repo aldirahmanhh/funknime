@@ -1,18 +1,18 @@
 import { useState, useEffect } from 'react';
 
 const THEMES = [
-  { id: 'neobrutalism', icon: '🎨', label: 'Neobrutalism' },
-  { id: 'minimal', icon: '✨', label: 'Minimal' },
   { id: 'dark', icon: '🌙', label: 'Dark' },
+  { id: 'minimal', icon: '✨', label: 'Minimal' },
+  { id: 'neobrutalism', icon: '🎨', label: 'Neobrutalism' },
 ];
 
 const ThemeSelector = () => {
-  const [currentTheme, setCurrentTheme] = useState('neobrutalism');
+  const [currentTheme, setCurrentTheme] = useState('dark');
   const [isOpen, setIsOpen] = useState(false);
 
   // Load theme from localStorage on mount
   useEffect(() => {
-    const savedTheme = localStorage.getItem('funknime-theme') || 'neobrutalism';
+    const savedTheme = localStorage.getItem('funknime-theme') || 'dark';
     setCurrentTheme(savedTheme);
     document.documentElement.setAttribute('data-theme', savedTheme);
   }, []);

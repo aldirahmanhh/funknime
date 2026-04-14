@@ -110,6 +110,7 @@ const Header = () => {
     { to: '/completed', label: 'Anime Completed' },
     { to: '/donghua-ongoing', label: 'Donghua Ongoing' },
     { to: '/donghua-completed', label: 'Donghua Completed' },
+    { to: '/donghua-search', label: 'Cari Donghua' },
     { to: '/genres', label: 'Genres' },
     { to: '/az-list', label: 'A-Z' },
     { to: '/schedule', label: 'Schedule' },
