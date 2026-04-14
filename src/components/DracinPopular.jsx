@@ -78,7 +78,7 @@ const DracinPopular = () => {
               <Link
                 key={idx}
                 to={`/dracin/${anime.slug}`}
-                className="anime-card"
+                className="anime-card dracin-card"
               >
                 <div className="anime-poster">
                   <img

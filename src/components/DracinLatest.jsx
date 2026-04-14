@@ -75,7 +75,7 @@ const DracinLatest = () => {
               <Link
                 key={idx}
                 to={`/dracin/${item.slug}`}
-                className="anime-card"
+                className="anime-card dracin-card"
               >
                 <div className="anime-poster">
                   <img
