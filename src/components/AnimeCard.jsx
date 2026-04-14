@@ -61,17 +61,20 @@ const AnimeCard = ({ anime, index = 0, innerRef, statusOverride, providerHint })
      ? anime.provider.trim().toLowerCase()
      : null;
    
-   // Donghua uses different route
+   // Route based on provider
    const detailPath = providerKey === 'donghua' 
      ? `/donghua/${animeId}`
-     : providerKey 
-       ? `/anime/${providerKey}/${animeId}` 
-       : `/anime/${animeId}`;
+     : providerKey === 'dracin'
+       ? `/dracin/${animeId}`
+       : providerKey 
+         ? `/anime/${providerKey}/${animeId}` 
+         : `/anime/${animeId}`;
 
    // Provider-specific colors
    const getProviderColor = (provider) => {
      if (!provider) return 'var(--color-primary)';
      const p = provider.toLowerCase();
+     if (p.includes('dracin')) return '#9B59B6'; // Purple for Dracin
      if (p.includes('donghua')) return '#FF6B6B'; // Red/Orange for Donghua
      if (p.includes('otakudesu')) return '#FFD700'; // Gold/Yellow
      if (p.includes('samehadaku')) return '#00D4FF'; // Cyan
