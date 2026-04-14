@@ -201,6 +201,72 @@ const Watch = () => {
     fetchEpisodeData();
   }, [episodeId, location.state?.provider]);
 
+  // Anti-ads script
+  useEffect(() => {
+    // Block popups and redirects
+    const blockPopups = (e) => {
+      if (e.target.tagName === 'A' && e.target.target === '_blank') {
+        const href = e.target.href || '';
+        if (href.includes('ad') || href.includes('popup') || href.includes('redirect')) {
+          e.preventDefault();
+          e.stopPropagation();
+          return false;
+        }
+      }
+    };
+
+    // Auto-click skip ad buttons
+    const autoSkipAds = () => {
+      const skipSelectors = [
+        '.skip-ad',
+        '.skip-button',
+        '.ytp-ad-skip-button',
+        '[class*="skip"]',
+        'button[aria-label*="Skip"]',
+      ];
+      
+      skipSelectors.forEach(selector => {
+        const skipBtn = document.querySelector(selector);
+        if (skipBtn && skipBtn.offsetParent !== null) {
+          skipBtn.click();
+        }
+      });
+    };
+
+    // Remove ad elements
+    const removeAds = () => {
+      const adSelectors = [
+        '.ad-container',
+        '.ads-container',
+        '.advertisement',
+        '[class*="ad-"]',
+        '[id*="ad-"]',
+        'iframe[src*="doubleclick"]',
+        'iframe[src*="googlesyndication"]',
+      ];
+      
+      adSelectors.forEach(selector => {
+        document.querySelectorAll(selector).forEach(el => {
+          if (el && el.parentNode) {
+            el.remove();
+          }
+        });
+      });
+    };
+
+    document.addEventListener('click', blockPopups, true);
+    
+    const adInterval = setInterval(() => {
+      autoSkipAds();
+      removeAds();
+    }, 1000);
+
+    return () => {
+      document.removeEventListener('click', blockPopups, true);
+      clearInterval(adInterval);
+    };
+  }, [videoUrl]);
+
   const handleServerSelect = (server) => {
     console.log('Selected server:', server);
     // If server has an href, fetch it for streaming URL

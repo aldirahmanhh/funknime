@@ -5,6 +5,7 @@ import './index.css'
 import './themes.css'
 import './neobrutalism-redesign.css'
 import './donghua-pages.css'
+import './anti-ads.css'
 import App from './App.jsx'
 
 createRoot(document.getElementById('root')).render(

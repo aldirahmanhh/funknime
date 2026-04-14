@@ -262,6 +262,32 @@
   flex-wrap: wrap;
 }
 
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px;
+  flex-wrap: wrap;
+}
+
+.btn-large {
+  padding: 16px 32px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  min-width: 200px;
+  justify-content: center;
+}
+
+@media (max-width: 768px) {
+  .action-buttons {
+    flex-direction: column;
+  }
+  
+  .btn-large {
+    width: 100%;
+  }
+}
+
 /* Mobile Responsive */
 @media (max-width: 768px) {
   .genre-grid {

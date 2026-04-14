@@ -1,0 +1,115 @@
+/* Anti-Ads CSS for Video Player */
+
+/* Hide common ad containers */
+.ad-container,
+.ads-container,
+.advertisement,
+.ad-banner,
+.ad-overlay,
+.video-ads,
+[class*="ad-"],
+[id*="ad-"],
+[class*="ads-"],
+[id*="ads-"],
+.google-ad,
+.adsbox,
+.adsbygoogle {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Hide iframe ads */
+iframe[src*="doubleclick"],
+iframe[src*="googlesyndication"],
+iframe[src*="googleadservices"],
+iframe[src*="advertising"],
+iframe[src*="/ads/"],
+iframe[src*="ad."],
+iframe[name*="google_ads"] {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* Hide video overlay ads */
+.video-overlay-ad,
+.video-ad-overlay,
+.ima-ad-container,
+.ytp-ad-overlay-container,
+.ytp-ad-text-overlay {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* Skip ad buttons - auto click simulation via CSS */
+.skip-ad,
+.skip-button,
+.ytp-ad-skip-button,
+[class*="skip"] {
+  pointer-events: auto !important;
+  z-index: 9999 !important;
+}
+
+/* Hide sponsored content */
+[class*="sponsor"],
+[id*="sponsor"],
+.sponsored-content {
+  display: none !important;
+}
+
+/* Clean video player */
+.video-wrapper {
+  position: relative;
+  width: 100%;
+  padding-bottom: 56.25%; /* 16:9 aspect ratio */
+  background: #000;
+  overflow: hidden;
+}
+
+.video-wrapper iframe,
+.video-wrapper video {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+}
+
+/* Block popup ads */
+.popup-ad,
+.modal-ad,
+[class*="popup"][class*="ad"] {
+  display: none !important;
+  visibility: hidden !important;
+}
+
+/* Hide floating ads */
+.floating-ad,
+[style*="position: fixed"][class*="ad"] {
+  display: none !important;
+}
+
+/* Clean player controls */
+.video-controls {
+  position: relative;
+  z-index: 100;
+}
+
+/* Anti-clickjacking */
+.video-container-wrapper {
+  position: relative;
+  isolation: isolate;
+}
+
+/* Block redirect overlays */
+.redirect-overlay,
+.click-overlay,
+[onclick*="window.open"],
+[onclick*="location.href"] {
+  pointer-events: none !important;
+  display: none !important;
+}
