@@ -22,8 +22,9 @@ const Watch = () => {
         setLoading(true);
         setError(null);
         
-        // Try providers in order: donghua -> otakudesu -> samehadaku -> stream
+        // Try providers in order: dracin -> donghua -> otakudesu -> samehadaku -> stream
         const providers = [
+          { fn: () => animeAPI.getDracinEpisode(episodeId), name: 'dracin' },
           { fn: () => animeAPI.getDonghuaEpisode(episodeId), name: 'donghua' },
           { fn: () => animeAPI.getEpisodeDetail(episodeId), name: 'otakudesu' },
           { fn: () => animeAPI.getEpisodeDetailSamehadaku(episodeId), name: 'samehadaku' },
@@ -40,8 +41,9 @@ const Watch = () => {
             const result = await p.fn();
             
             // Check if result has valid data
-            // Donghua has streaming.servers, anime has defaultStreamingUrl/servers/server
-            const hasValidData = result?.streaming?.servers || 
+            // Dracin has data.stream_links, Donghua has streaming.servers, anime has defaultStreamingUrl/servers/server
+            const hasValidData = result?.data?.stream_links ||
+                                result?.streaming?.servers || 
                                 result?.data?.defaultStreamingUrl || 
                                 result?.data?.servers || 
                                 result?.data?.server;
@@ -103,6 +105,41 @@ const Watch = () => {
               poster: data.donghua_details.poster,
               provider: 'donghua',
             });
+          }
+          
+          setLoading(false);
+          return;
+        }
+
+        // Handle Dracin response structure
+        if (usedProvider === 'dracin' && data.data) {
+          const dracinData = {
+            episode: data.data.title,
+            defaultStreamingUrl: data.data.stream_links?.[0]?.url || '',
+            server: {
+              qualities: [{
+                title: 'Streaming',
+                serverList: (data.data.stream_links || []).map(s => ({
+                  title: s.server,
+                  url: s.url,
+                })),
+              }],
+            },
+            download_links: data.data.download_links || [],
+            next_slug: data.data.next_slug,
+            prev_slug: data.data.prev_slug,
+            hasNextEpisode: !!data.data.next_slug,
+            hasPrevEpisode: !!data.data.prev_slug,
+            nextEpisode: data.data.next_slug ? { episodeId: data.data.next_slug } : null,
+            prevEpisode: data.data.prev_slug ? { episodeId: data.data.prev_slug } : null,
+          };
+          
+          setEpisodeData(dracinData);
+          setVideoUrl(dracinData.defaultStreamingUrl);
+          
+          if (dracinData.server.qualities.length > 0) {
+            setSelectedQuality('Streaming');
+            setSelectedServer(dracinData.server.qualities[0].serverList[0]);
           }
           
           setLoading(false);

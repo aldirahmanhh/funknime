@@ -42,6 +42,13 @@ const Header = () => {
         { to: '/donghua-az', label: 'A-Z List' },
       ]
     },
+    { 
+      label: 'Dracin',
+      submenu: [
+        { to: '/dracin-latest', label: 'Latest Episodes' },
+        { to: '/dracin-list', label: 'Anime List' },
+      ]
+    },
     { to: '/genres', label: 'Genres' },
     { to: '/schedule', label: 'Schedule' },
     { to: '/history', label: 'History' },
