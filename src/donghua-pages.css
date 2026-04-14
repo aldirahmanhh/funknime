@@ -262,6 +262,20 @@
   flex-wrap: wrap;
 }
 
+/* Search Button */
+.search-button {
+  padding: 10px 24px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .search-button {
+    padding: 8px 20px;
+    font-size: 0.9rem;
+  }
+}
+
 /* Action Buttons */
 .action-buttons {
   display: flex;

@@ -384,7 +384,17 @@ const Watch = () => {
           </p>
         )}
         <div className="error-actions">
-          <button type="button" className="btn btn-primary" onClick={() => navigate(-1)}>
+          <button 
+            type="button" 
+            className="btn btn-primary" 
+            onClick={() => {
+              if (window.history.length > 1) {
+                navigate(-1);
+              } else {
+                navigate('/');
+              }
+            }}
+          >
             ← Kembali
           </button>
           <Link to="/" className="btn btn-secondary">

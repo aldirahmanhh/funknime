@@ -128,14 +128,14 @@ const DonghuaDetail = () => {
             {Array.isArray(episodes) && episodes.length > 0 && (
               <div className="action-buttons">
                 <Link 
-                  to={`/watch/${episodes[0].slug || episodes[0].episodeId}`}
+                  to={`/watch/${episodes[episodes.length - 1].slug || episodes[episodes.length - 1].episodeId}`}
                   className="btn btn-primary btn-large"
                 >
                   ▶ Mulai Episode 1
                 </Link>
                 {episodes.length > 1 && (
                   <Link 
-                    to={`/watch/${episodes[episodes.length - 1].slug || episodes[episodes.length - 1].episodeId}`}
+                    to={`/watch/${episodes[0].slug || episodes[0].episodeId}`}
                     className="btn btn-secondary btn-large"
                   >
                     Episode Terbaru
