@@ -3,33 +3,36 @@ import { Link } from 'react-router-dom';
 import { animeAPI } from '../services/api';
 import '../donghua-pages.css';
 
-const DracinLatest = () => {
-  const [episodes, setEpisodes] = useState([]);
+const DracinPopular = () => {
+  const [animeList, setAnimeList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [hasNext, setHasNext] = useState(false);
 
   useEffect(() => {
-    const fetchLatest = async () => {
+    const fetchPopular = async () => {
       try {
         setLoading(true);
         setError(null);
-        const response = await animeAPI.getDracinLatest(currentPage);
+        const response = await animeAPI.getDracinPopular(currentPage);
         
         if (response && response.data && Array.isArray(response.data)) {
-          setEpisodes(response.data);
+          setAnimeList(response.data);
+          setHasNext(response.pagination?.has_next || false);
         } else {
-          setEpisodes([]);
+          setAnimeList([]);
+          setHasNext(false);
         }
       } catch (err) {
-        console.error('Error fetching Dracin latest:', err);
-        setError(err.message || 'Gagal memuat episode terbaru');
+        console.error('Error fetching Dracin popular:', err);
+        setError(err.message || 'Gagal memuat daftar anime');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchLatest();
+    fetchPopular();
   }, [currentPage]);
 
   if (loading) {
@@ -37,7 +40,7 @@ const DracinLatest = () => {
       <div className="main-container">
         <div className="loading-container">
           <div className="spinner" />
-          <p>Memuat episode terbaru...</p>
+          <p>Memuat daftar anime...</p>
         </div>
       </div>
     );
@@ -60,27 +63,27 @@ const DracinLatest = () => {
   return (
     <div className="main-container donghua-page">
       <div className="page-header">
-        <h1>Episode Terbaru Dracin</h1>
-        <p>Episode anime terbaru dari provider Dracin</p>
+        <h1>Dracin Popular</h1>
+        <p>Anime populer dari provider Dracin</p>
       </div>
 
-      {episodes.length === 0 ? (
+      {animeList.length === 0 ? (
         <div className="empty-state">
-          <p>Tidak ada episode terbaru</p>
+          <p>Tidak ada anime</p>
         </div>
       ) : (
         <>
           <div className="anime-grid">
-            {episodes.map((item, idx) => (
+            {animeList.map((anime, idx) => (
               <Link
                 key={idx}
-                to={`/dracin/${item.slug}`}
+                to={`/dracin/${anime.slug}`}
                 className="anime-card"
               >
                 <div className="anime-poster">
                   <img
-                    src={item.poster}
-                    alt={item.title}
+                    src={anime.poster}
+                    alt={anime.title}
                     loading="lazy"
                     onError={(e) => {
                       e.target.src = 'https://via.placeholder.com/200x280/2e2e2e/666?text=No+Image';
@@ -89,14 +92,14 @@ const DracinLatest = () => {
                   <div className="anime-overlay">
                     <span className="play-icon">▶</span>
                   </div>
-                  {item.episode_info && (
+                  {anime.episode_info && (
                     <div className="episode-badge">
-                      {item.episode_info}
+                      {anime.episode_info}
                     </div>
                   )}
                 </div>
                 <div className="anime-info">
-                  <h3 className="anime-title">{item.title}</h3>
+                  <h3 className="anime-title">{anime.title}</h3>
                   <div className="anime-meta">
                     <span className="provider-badge" style={{ backgroundColor: '#9B59B6' }}>
                       Dracin
@@ -118,7 +121,7 @@ const DracinLatest = () => {
             <span className="page-info">Halaman {currentPage}</span>
             <button
               onClick={() => setCurrentPage(p => p + 1)}
-              disabled={episodes.length === 0}
+              disabled={!hasNext}
               className="btn btn-primary"
             >
               Berikutnya →
@@ -130,4 +133,4 @@ const DracinLatest = () => {
   );
 };
 
-export default DracinLatest;
+export default DracinPopular;

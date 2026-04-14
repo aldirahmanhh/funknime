@@ -730,45 +730,36 @@ export const animeAPI = {
     return fetchAnime(`/donghua/seasons/${year}`, 'donghua');
   },
 
-  // ========== DRACIN API (STREAM) ==========
+  // ========== DRACIN API (DRACHIN) ==========
   
-  // Get latest episodes
+  // Get home page (slider + latest + popular)
+  getDracinHome: async () => {
+    return fetchAnime('/drachin/home', 'dracin');
+  },
+
+  // Get latest releases
   getDracinLatest: async (page = 1) => {
-    return fetchAnime(`/stream/latest/${page}`, 'dracin');
+    return fetchAnime(`/drachin/latest?page=${page}`, 'dracin');
   },
 
-  // Get anime list
-  getDracinList: async () => {
-    return fetchAnime('/stream/list', 'dracin');
+  // Get popular
+  getDracinPopular: async (page = 1) => {
+    return fetchAnime(`/drachin/popular?page=${page}`, 'dracin');
   },
 
-  // Get popular anime
-  getDracinPopular: async () => {
-    return fetchAnime('/stream/popular', 'dracin');
-  },
-
-  // Get all genres
-  getDracinGenres: async () => {
-    return fetchAnime('/stream/genres', 'dracin');
-  },
-
-  // Get anime by genre
-  getDracinByGenre: async (slug, page = 1) => {
-    return fetchAnime(`/stream/genres/${slug}/${page}`, 'dracin');
-  },
-
-  // Search anime
+  // Search
   searchDracin: async (keyword) => {
-    return fetchAnime(`/stream/search/${encodeURIComponent(keyword)}`, 'dracin');
+    return fetchAnime(`/drachin/search/${encodeURIComponent(keyword)}`, 'dracin');
   },
 
-  // Get anime detail
+  // Get detail
   getDracinDetail: async (slug) => {
-    return fetchAnime(`/stream/anime/${slug}`, 'dracin');
+    return fetchAnime(`/drachin/detail/${slug}`, 'dracin');
   },
 
-  // Get episode streaming links
-  getDracinEpisode: async (slug) => {
-    return fetchAnime(`/stream/episode/${slug}`, 'dracin');
+  // Get episode (need to discover endpoint structure)
+  getDracinEpisode: async (slug, episode) => {
+    // Placeholder - need actual endpoint from user
+    return fetchAnime(`/drachin/episode/${slug}/${episode}`, 'dracin');
   },
 };

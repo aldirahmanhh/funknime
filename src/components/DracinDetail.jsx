@@ -49,8 +49,8 @@ const DracinDetail = () => {
         <div className="error-container">
           <h2>Terjadi Kesalahan</h2>
           <p>{error || 'Anime tidak ditemukan'}</p>
-          <Link to="/dracin-list" className="btn btn-primary">
-            Kembali ke Daftar
+          <Link to="/dracin-popular" className="btn btn-primary">
+            Kembali ke Popular
           </Link>
         </div>
       </div>
@@ -58,13 +58,15 @@ const DracinDetail = () => {
   }
 
   const episodes = anime.episodes || [];
+  const tags = anime.tags || [];
+  const recommendations = anime.recommendations || [];
 
   return (
     <div className="main-container donghua-detail">
       <div className="detail-header">
         <div className="detail-poster">
           <img
-            src={anime.poster}
+            src={anime.poster || 'https://via.placeholder.com/300x420/2e2e2e/666?text=No+Image'}
             alt={anime.title}
             onError={(e) => {
               e.target.src = 'https://via.placeholder.com/300x420/2e2e2e/666?text=No+Image';
@@ -78,6 +80,9 @@ const DracinDetail = () => {
             <span className="provider-badge" style={{ backgroundColor: '#9B59B6' }}>
               Dracin
             </span>
+            {anime.total_episodes && (
+              <span className="episode-count">{anime.total_episodes} Episode</span>
+            )}
           </div>
 
           {anime.synopsis && (
@@ -87,13 +92,13 @@ const DracinDetail = () => {
             </div>
           )}
 
-          {anime.genres && anime.genres.length > 0 && (
+          {tags.length > 0 && (
             <div className="detail-genres">
-              <h3>Genre</h3>
+              <h3>Tags</h3>
               <div className="genre-tags">
-                {anime.genres.map((genre, idx) => (
+                {tags.map((tag, idx) => (
                   <span key={idx} className="genre-tag">
-                    {genre}
+                    {tag}
                   </span>
                 ))}
               </div>
@@ -103,7 +108,7 @@ const DracinDetail = () => {
           {Array.isArray(episodes) && episodes.length > 0 && (
             <div className="action-buttons">
               <Link 
-                to={`/watch/${episodes[episodes.length - 1].eps_slug}`}
+                to={`/watch/${episodes[0].slug}?ep=${episodes[0].index}`}
                 className="btn btn-primary btn-large"
                 state={{ provider: 'dracin' }}
               >
@@ -111,7 +116,7 @@ const DracinDetail = () => {
               </Link>
               {episodes.length > 1 && (
                 <Link 
-                  to={`/watch/${episodes[0].eps_slug}`}
+                  to={`/watch/${episodes[episodes.length - 1].slug}?ep=${episodes[episodes.length - 1].index}`}
                   className="btn btn-secondary btn-large"
                   state={{ provider: 'dracin' }}
                 >
@@ -130,12 +135,49 @@ const DracinDetail = () => {
             {episodes.map((ep, idx) => (
               <Link
                 key={idx}
-                to={`/watch/${ep.eps_slug}`}
+                to={`/watch/${ep.slug}?ep=${ep.index}`}
                 className="episode-card"
                 state={{ provider: 'dracin' }}
               >
                 <div className="episode-number">
-                  {ep.eps_title || `Episode ${idx + 1}`}
+                  Episode {ep.episode}
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {recommendations.length > 0 && (
+        <div className="episodes-section">
+          <h2>Rekomendasi</h2>
+          <div className="anime-grid">
+            {recommendations.map((rec, idx) => (
+              <Link
+                key={idx}
+                to={`/dracin/${rec.slug}`}
+                className="anime-card"
+              >
+                <div className="anime-poster">
+                  <img
+                    src={rec.poster}
+                    alt={rec.title}
+                    loading="lazy"
+                    onError={(e) => {
+                      e.target.src = 'https://via.placeholder.com/200x280/2e2e2e/666?text=No+Image';
+                    }}
+                  />
+                  <div className="anime-overlay">
+                    <span className="play-icon">▶</span>
+                  </div>
+                  {rec.episode_info && (
+                    <div className="episode-badge">
+                      {rec.episode_info}
+                    </div>
+                  )}
+                </div>
+                <div className="anime-info">
+                  <h3 className="anime-title">{rec.title}</h3>
                 </div>
               </Link>
             ))}

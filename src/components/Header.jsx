@@ -45,8 +45,8 @@ const Header = () => {
     { 
       label: 'Dracin',
       submenu: [
-        { to: '/dracin-latest', label: 'Latest Episodes' },
-        { to: '/dracin-list', label: 'Anime List' },
+        { to: '/dracin-latest', label: 'Latest' },
+        { to: '/dracin-popular', label: 'Popular' },
       ]
     },
     { to: '/genres', label: 'Genres' },
