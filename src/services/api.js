@@ -183,20 +183,19 @@ const fetchAnime = async (endpoint, provider = 'default') => {
         logBody,
       );
 
+      // For 404 errors, throw a specific error instead of returning empty data
+      if (response.status === 404) {
+        throw new APIError('Episode atau anime tidak ditemukan', 404);
+      }
+
       // Return the parsed data or a "not found" object even if HTTP status is error
       // This allows caller to handle "not found" cases gracefully
       if (parsed && typeof parsed === 'object') {
         return parsed;
       }
 
-      // For non-JSON responses (like HTML error pages), return "not found" instead of throwing
-      // The caller will handle this as empty results
-      return {
-        status: 'error',
-        statusCode: response.status,
-        message: 'Not found',
-        data: { animeList: [] }
-      };
+      // For non-JSON responses (like HTML error pages), throw error instead of returning empty
+      throw new APIError(`Server error: ${response.status} ${response.statusText}`, response.status);
     }
 
     const data = await response.json();

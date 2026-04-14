@@ -740,6 +740,9 @@ h1, h2, h3, h4, h5, h6 {
   border: 5px solid var(--color-border);
   box-shadow: var(--shadow-xl);
   position: relative;
+  max-width: 600px;
+  margin: var(--space-12) auto;
+  border-radius: var(--radius-lg);
 }
 
 .error-container::before,
@@ -753,18 +756,39 @@ h1, h2, h3, h4, h5, h6 {
   animation: bounce 1s ease-in-out infinite;
 }
 
+.error-icon {
+  font-size: 5rem;
+  margin-bottom: var(--space-4);
+  animation: bounce 1s ease-in-out infinite;
+}
+
+.error-container h2 {
+  font-size: var(--text-3xl);
+  font-weight: var(--font-black);
+  color: var(--color-text);
+  margin-bottom: var(--space-2);
+}
+
 .error-message {
   font-size: var(--text-xl);
-  font-weight: 900;
+  font-weight: var(--font-bold);
   color: var(--color-error);
-  font-family: var(--font-heading);
-  font-size: 1.5rem;
+  margin-bottom: var(--space-4);
 }
 
 .error-hint {
+  font-size: var(--text-base);
   color: var(--color-text-muted);
-  font-weight: 600;
   max-width: 500px;
+  line-height: 1.6;
+  margin-bottom: var(--space-6);
+}
+
+.error-actions {
+  display: flex;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 /* ========== FORMS & INPUTS ========== */

@@ -20,6 +20,7 @@ const Watch = () => {
     const fetchEpisodeData = async () => {
       try {
         setLoading(true);
+        setError(null);
         
         // Try providers in order: otakudesu -> samehadaku -> stream
         const providers = [
@@ -30,23 +31,32 @@ const Watch = () => {
         
         let data = null;
         let usedProvider = null;
+        let lastError = null;
         
         for (const p of providers) {
           try {
+            console.log(`[Watch] Trying provider: ${p.name}`);
             const result = await p.fn();
-            if (result?.data) {
+            
+            // Check if result has valid data
+            if (result?.data && (result.data.defaultStreamingUrl || result.data.servers || result.data.server)) {
               data = result;
               usedProvider = p.name;
+              console.log(`[Watch] Success with provider: ${p.name}`);
               break;
+            } else {
+              console.log(`[Watch] Provider ${p.name} returned empty data`);
             }
           } catch (e) {
+            console.log(`[Watch] Provider ${p.name} failed:`, e.message);
+            lastError = e;
             // Try next provider
             continue;
           }
         }
         
-        if (!data) {
-          throw new Error('Episode tidak ditemukan di semua provider');
+        if (!data || !data.data) {
+          throw new Error(lastError?.message || 'Episode tidak ditemukan di semua provider. Mungkin episode ini belum tersedia atau sudah dihapus.');
         }
         
         const raw = data?.data || null;
@@ -57,11 +67,30 @@ const Watch = () => {
         // Otakudesu-style: servers[] at root of data
         if (raw && !raw.server && Array.isArray(raw.servers)) {
           const firstServer = raw.servers[0] || {};
+          
+          // Group servers by quality if possible
+          const qualityMap = new Map();
+          raw.servers.forEach((s) => {
+            const quality = s.quality || s.resolution || 'Default';
+            if (!qualityMap.has(quality)) {
+              qualityMap.set(quality, []);
+            }
+            qualityMap.get(quality).push({
+              ...s,
+              title: s.name || s.server || s.title || 'Server',
+            });
+          });
+          
+          const qualities = Array.from(qualityMap.entries()).map(([quality, serverList]) => ({
+            title: quality,
+            serverList,
+          }));
+          
           normalized = {
             ...raw,
             defaultStreamingUrl: raw.defaultStreamingUrl || firstServer.url,
             server: {
-              qualities: [
+              qualities: qualities.length > 0 ? qualities : [
                 {
                   title: 'Default',
                   serverList: raw.servers.map((s, idx) => ({
@@ -76,9 +105,20 @@ const Watch = () => {
 
         setEpisodeData(normalized);
 
-        // Set default streaming URL
+        // Set default streaming URL and quality
         if (normalized?.defaultStreamingUrl) {
           setVideoUrl(normalized.defaultStreamingUrl);
+        }
+        
+        // Set initial quality based on available qualities
+        if (normalized?.server?.qualities?.length > 0) {
+          const firstQuality = normalized.server.qualities[0];
+          setSelectedQuality(firstQuality.title);
+          
+          // Set first server of first quality as default
+          if (firstQuality.serverList?.length > 0) {
+            setSelectedServer(firstQuality.serverList[0]);
+          }
         }
 
         // Also fetch anime details
@@ -101,13 +141,14 @@ const Watch = () => {
           }
         }
       } catch (err) {
+        console.error('[Watch] Fatal error:', err);
         setError(err?.message ?? String(err));
       } finally {
         setLoading(false);
       }
     };
     fetchEpisodeData();
-  }, [episodeId]);
+  }, [episodeId, location.state?.provider]);
 
   const handleServerSelect = (server) => {
     console.log('Selected server:', server);
@@ -140,13 +181,26 @@ const Watch = () => {
   };
 
   const handleQualityChange = (quality) => {
+    console.log('[Watch] Quality changed to:', quality);
     setSelectedQuality(quality);
-    // Find a server for this quality
-    const servers = episodeData?.server?.qualities?.find(q => q.title === quality)?.serverList;
+    
+    // Find servers for this quality
+    const qualityData = episodeData?.server?.qualities?.find(q => q.title === quality);
+    const servers = qualityData?.serverList;
+    
     if (servers && servers.length > 0) {
+      console.log('[Watch] Available servers for quality:', servers);
+      
       // Select first available server for this quality
-      const defaultServer = servers.find(s => s.title.toLowerCase().includes('ondesu')) || servers[0];
+      const defaultServer = servers.find(s => 
+        s.title?.toLowerCase().includes('ondesu') || 
+        s.title?.toLowerCase().includes('default')
+      ) || servers[0];
+      
+      console.log('[Watch] Selected server:', defaultServer);
       handleServerSelect(defaultServer);
+    } else {
+      console.warn('[Watch] No servers found for quality:', quality);
     }
   };
 
@@ -195,11 +249,31 @@ const Watch = () => {
   }
 
   if (error || !episodeData) {
+    const isNotFound = error?.includes('tidak ditemukan') || error?.includes('404');
+    
     return (
       <div className="error-container main-container">
-        <p className="error-message">Video tidak tersedia: {error || 'Episode tidak ditemukan'}</p>
-        <button type="button" className="btn btn-primary" onClick={() => navigate(-1)}>Kembali</button>
-        <Link to="/" className="btn btn-secondary" style={{ marginTop: 8 }}>Ke Beranda</Link>
+        <div className="error-icon" aria-hidden="true">
+          {isNotFound ? '🔍' : '⚠️'}
+        </div>
+        <h2>{isNotFound ? 'Episode Tidak Ditemukan' : 'Terjadi Kesalahan'}</h2>
+        <p className="error-message">
+          {error || 'Episode tidak ditemukan'}
+        </p>
+        {isNotFound && (
+          <p className="error-hint">
+            Episode ini mungkin belum tersedia, sudah dihapus, atau URL-nya salah.
+            Coba cek daftar episode di halaman anime.
+          </p>
+        )}
+        <div className="error-actions">
+          <button type="button" className="btn btn-primary" onClick={() => navigate(-1)}>
+            ← Kembali
+          </button>
+          <Link to="/" className="btn btn-secondary">
+            Ke Beranda
+          </Link>
+        </div>
       </div>
     );
   }
