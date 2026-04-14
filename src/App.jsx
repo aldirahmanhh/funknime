@@ -11,6 +11,7 @@ import AZList from './components/AZList'
 import Search from './components/Search'
 import Schedule from './components/Schedule'
 import WatchHistory from './components/WatchHistory'
+import ThemeSelector from './components/ThemeSelector'
 import { ThemeProvider } from './contexts/ThemeContext'
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
           <div className="floating-shape floating-shape--3"></div>
         </div>
         <Header />
+        <ThemeSelector />
         <main id="main-content">
         <Routes>
           <Route path="/" element={<Home />} />
