@@ -26,7 +26,7 @@ const Genres = () => {
         if (cancelled) return;
 
         const normalizeList = (data, provider) => {
-          const raw = data?.genreList ?? (Array.isArray(data) ? data : []);
+          const raw = data?.data?.genreList ?? data?.genreList ?? (Array.isArray(data) ? data : []);
           if (!Array.isArray(raw)) return [];
           return raw.map((g) => ({
             ...g,
