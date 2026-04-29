@@ -162,7 +162,7 @@ const Home = () => {
       <header className="page-header home-hero home-hero--streaming">
         <div className="home-hero-copy">
           <h1 className="main-title text-gradient" data-text="MRFUNK">MRFUNK</h1>
-          <p className="subtitle">Streaming anime & donghua sub Indo — katalog gabungan Otakudesu & Samehadaku.</p>
+          <p className="subtitle">Tempat nonton anime & donghua sub Indo paling lengkap. Gratis, tanpa ribet.</p>
           <div className="home-hero-actions">
             <Link to="/search" className="btn btn-primary">🔍 Cari Anime</Link>
             <Link to="/ongoing" className="btn btn-secondary">📺 Sedang Tayang</Link>

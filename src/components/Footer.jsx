@@ -27,7 +27,7 @@ const Footer = () => {
               <span className="footer-brand-name">MrFunk</span>
             </Link>
             <p className="footer-tagline">
-              Streaming anime & donghua sub Indo terlengkap. Gratis, tanpa iklan berlebihan.
+              Tempat nonton anime & donghua sub Indo paling lengkap. Gratis, kualitas terbaik.
             </p>
             <a href="https://trakteer.id/aldirahmanhh" target="_blank" rel="noopener noreferrer" className="footer-donate-btn">
               ☕ Dukung Kami
@@ -60,7 +60,7 @@ const Footer = () => {
           {/* Bottom */}
           <div className="footer-bottom">
             <p className="footer-copy">© {year} MrFunk. All rights reserved.</p>
-            <p className="footer-disclaimer">Disclaimer: MrFunk tidak menyimpan file video apapun di server kami. Semua konten disediakan oleh pihak ketiga.</p>
+            <p className="footer-disclaimer">MrFunk adalah platform streaming anime gratis. Kami tidak menyimpan file video di server kami.</p>
           </div>
         </div>
       </footer>
