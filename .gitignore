@@ -25,3 +25,20 @@ dist-ssr
 
 # Claude
 .claude/
+
+# Debug/dev files
+*.response.json
+*_response.json
+daftar_*.json
+genre.json
+search.json
+server*.json
+episode_full.json
+unlimited.json
+docs/
+BUG_*.md
+CLAUDE.md
+NEOBRUTALISM_REDESIGN.md
+UI_UX_IMPROVEMENTS.md
+VERCEL_404_FIX.md
+anime_rest_api_docs.md
