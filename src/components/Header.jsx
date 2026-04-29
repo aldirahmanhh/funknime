@@ -45,7 +45,6 @@ const Header = () => {
     { 
       label: 'Dracin',
       submenu: [
-        { to: '/dracin-maintenance', label: '⚠️ Maintenance' },
         { to: '/dracin-latest', label: 'Latest' },
         { to: '/dracin-popular', label: 'Popular' },
       ]

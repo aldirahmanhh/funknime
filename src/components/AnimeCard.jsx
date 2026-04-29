@@ -84,10 +84,25 @@ const AnimeCard = ({ anime, index = 0, innerRef, statusOverride, providerHint })
 
    const providerColor = getProviderColor(finalProvider);
 
+   // Pass drama metadata in state for dracin (since getDracinDetail API is broken)
+   const linkState = providerKey === 'dracin' ? {
+     dramaInfo: {
+       bookId: animeId,
+       title,
+       poster: anime.poster || anime.coverWap,
+       introduction: anime.introduction,
+       chapterCount: anime.chapterCount,
+       playCount: anime.playCount,
+       corner: anime.corner,
+       tagV3s: anime.tagV3s,
+     }
+   } : undefined;
+
   return (
     <Link
       ref={innerRef}
       to={detailPath}
+      state={linkState}
       className="anime-card card"
       title={title}
     >

@@ -1028,6 +1028,30 @@ main {
   border: none;
 }
 
+.switch-server-hint {
+  display: flex;
+  justify-content: center;
+  margin-top: var(--space-3);
+}
+
+.btn-switch-server {
+  padding: var(--space-2) var(--space-5);
+  border-radius: var(--radius-md);
+  border: 3px solid var(--color-accent);
+  background: transparent;
+  color: var(--color-accent);
+  font-family: var(--font-heading);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.btn-switch-server:hover {
+  background: var(--color-accent);
+  color: #fff;
+}
+
 .video-controls {
   margin-top: var(--space-5);
   padding: var(--space-4);

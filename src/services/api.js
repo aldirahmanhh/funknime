@@ -730,36 +730,71 @@ export const animeAPI = {
     return fetchAnime(`/donghua/seasons/${year}`, 'donghua');
   },
 
-  // ========== DRACIN API (DRACHIN) ==========
-  
-  // Get home page (slider + latest + popular)
-  getDracinHome: async () => {
-    return fetchAnime('/drachin/home', 'dracin');
+  // ========== DRAMABOX API (via Vercel Serverless Proxy) ==========
+
+  // Fetch from DramaBox serverless proxy
+  _fetchDramaBox: async (action, params = {}) => {
+    const query = new URLSearchParams({ action, ...params });
+    const url = `/api/dramabox?${query}`;
+    
+    const cached = getFromCache(url);
+    if (cached) return cached;
+    
+    if (isRateLimited(url)) {
+      throw new APIError('Rate limited, coba lagi nanti', 429);
+    }
+    
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new APIError(`DramaBox API error: ${response.status}`, response.status);
+    }
+    
+    const data = await response.json();
+    if (!data.success) {
+      throw new APIError(data.message || data.error || 'DramaBox request failed', 500);
+    }
+    
+    setCache(url, data);
+    return data;
   },
 
-  // Get latest releases
+  // Get latest DramaBox dramas
   getDracinLatest: async (page = 1) => {
-    return fetchAnime(`/drachin/latest?page=${page}`, 'dracin');
+    return animeAPI._fetchDramaBox('latest', { page: String(page) });
   },
 
-  // Get popular
+  // Get trending/popular DramaBox dramas
   getDracinPopular: async (page = 1) => {
-    return fetchAnime(`/drachin/popular?page=${page}`, 'dracin');
+    return animeAPI._fetchDramaBox('trending');
   },
 
-  // Search
-  searchDracin: async (keyword) => {
-    return fetchAnime(`/drachin/search/${encodeURIComponent(keyword)}`, 'dracin');
+  // Search DramaBox dramas
+  searchDracin: async (keyword, page = 1) => {
+    return animeAPI._fetchDramaBox('search', { keyword, page: String(page) });
   },
 
-  // Get detail
-  getDracinDetail: async (slug) => {
-    return fetchAnime(`/drachin/detail/${slug}`, 'dracin');
+  // Get DramaBox drama detail
+  getDracinDetail: async (bookId) => {
+    return animeAPI._fetchDramaBox('detail', { bookId });
   },
 
-  // Get episode (need to discover endpoint structure)
-  getDracinEpisode: async (slug, episode) => {
-    // Placeholder - need actual endpoint from user
-    return fetchAnime(`/drachin/episode/${slug}/${episode}`, 'dracin');
+  // Get DramaBox chapters/episodes list
+  getDracinChapters: async (bookId) => {
+    return animeAPI._fetchDramaBox('chapters', { bookId });
+  },
+
+  // Get DramaBox episode with streaming URL
+  getDracinEpisode: async (bookId, index = 1) => {
+    return animeAPI._fetchDramaBox('episode', { bookId, index: String(index) });
+  },
+
+  // Get DramaBox drama list with pagination
+  getDracinList: async (page = 1, pageSize = 20) => {
+    return animeAPI._fetchDramaBox('list', { page: String(page), pageSize: String(pageSize) });
+  },
+
+  // Get DramaBox homepage data
+  getDracinHome: async () => {
+    return animeAPI._fetchDramaBox('homepage');
   },
 };

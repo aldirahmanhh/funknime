@@ -22,14 +22,28 @@ const Watch = () => {
         setLoading(true);
         setError(null);
         
-        // Try providers in order: dracin -> donghua -> otakudesu -> samehadaku -> stream
-        const providers = [
-          { fn: () => animeAPI.getDracinEpisode(episodeId), name: 'dracin' },
+        // Build provider list based on navigation context
+        const stateProvider = location.state?.provider;
+        const dracinIndex = location.state?.episodeIndex || 1;
+        
+        const allProviders = [
+          { fn: () => animeAPI.getDracinEpisode(episodeId, dracinIndex), name: 'dracin' },
           { fn: () => animeAPI.getDonghuaEpisode(episodeId), name: 'donghua' },
           { fn: () => animeAPI.getEpisodeDetail(episodeId), name: 'otakudesu' },
           { fn: () => animeAPI.getEpisodeDetailSamehadaku(episodeId), name: 'samehadaku' },
           { fn: () => animeAPI.getEpisodeDetailStream(episodeId), name: 'stream' },
         ];
+        
+        // If provider is known, try it first then fallback to others (skip dracin for non-dracin)
+        let providers;
+        if (stateProvider) {
+          const primary = allProviders.find(p => p.name === stateProvider);
+          const rest = allProviders.filter(p => p.name !== stateProvider && p.name !== 'dracin');
+          providers = primary ? [primary, ...rest] : rest;
+        } else {
+          // No provider hint - skip dracin (its API is unreliable), try others
+          providers = allProviders.filter(p => p.name !== 'dracin');
+        }
         
         let data = null;
         let usedProvider = null;
@@ -41,8 +55,9 @@ const Watch = () => {
             const result = await p.fn();
             
             // Check if result has valid data
-            // Dracin has data.stream_links, Donghua has streaming.servers, anime has defaultStreamingUrl/servers/server
-            const hasValidData = result?.data?.stream_links ||
+            // DramaBox has data.episode.videoPath, Donghua has streaming.servers, anime has defaultStreamingUrl/servers/server
+            const hasValidData = result?.data?.episode?.videoPath ||
+                                result?.data?.episode?.stream ||
                                 result?.streaming?.servers || 
                                 result?.data?.defaultStreamingUrl || 
                                 result?.data?.servers || 
@@ -65,6 +80,10 @@ const Watch = () => {
         }
         
         if (!data) {
+          // Dracin-specific: API endpoint is down, give a clearer message
+          if (stateProvider === 'dracin') {
+            throw new Error('DRACIN_UNAVAILABLE');
+          }
           throw new Error(lastError?.message || 'Episode tidak ditemukan di semua provider. Mungkin episode ini belum tersedia atau sudah dihapus.');
         }
         
@@ -111,36 +130,44 @@ const Watch = () => {
           return;
         }
 
-        // Handle Dracin response structure
-        if (usedProvider === 'dracin' && data.data) {
+        // Handle DramaBox response structure (direct MP4 URLs)
+        if (usedProvider === 'dracin' && data?.data) {
+          const ep = data.data.episode || {};
+          const videoPath = ep.videoPath || ep.stream || '';
+          const dramaTitle = location.state?.dramaTitle || `Drama #${episodeId}`;
+          
           const dracinData = {
-            episode: data.data.title,
-            defaultStreamingUrl: data.data.stream_links?.[0]?.url || '',
+            title: ep.name || `Episode ${ep.index || dracinIndex}`,
+            episode: ep.name || `Episode ${ep.index || dracinIndex}`,
+            defaultStreamingUrl: videoPath,
+            isDramaBox: true,
             server: {
               qualities: [{
-                title: 'Streaming',
-                serverList: (data.data.stream_links || []).map(s => ({
-                  title: s.server,
-                  url: s.url,
-                })),
+                title: 'DramaBox',
+                serverList: videoPath ? [{ title: 'DramaBox MP4', url: videoPath, serverId: 'dramabox-mp4' }] : [],
               }],
             },
-            download_links: data.data.download_links || [],
-            next_slug: data.data.next_slug,
-            prev_slug: data.data.prev_slug,
-            hasNextEpisode: !!data.data.next_slug,
-            hasPrevEpisode: !!data.data.prev_slug,
-            nextEpisode: data.data.next_slug ? { episodeId: data.data.next_slug } : null,
-            prevEpisode: data.data.prev_slug ? { episodeId: data.data.prev_slug } : null,
+            hasNextEpisode: !!data.data.nextEpisode,
+            hasPrevEpisode: !!data.data.prevEpisode,
+            nextEpisode: data.data.nextEpisode ? { episodeId, episodeIndex: data.data.nextEpisode.index } : null,
+            prevEpisode: data.data.prevEpisode ? { episodeId, episodeIndex: data.data.prevEpisode.index } : null,
+            dramaTitle,
           };
           
           setEpisodeData(dracinData);
-          setVideoUrl(dracinData.defaultStreamingUrl);
+          setVideoUrl(videoPath);
+          setSelectedQuality('DramaBox');
+          setSelectedServer(dracinData.server.qualities[0]?.serverList[0] || null);
           
-          if (dracinData.server.qualities.length > 0) {
-            setSelectedQuality('Streaming');
-            setSelectedServer(dracinData.server.qualities[0].serverList[0]);
-          }
+          // Save to watch history
+          addToWatchHistory({
+            animeId: episodeId,
+            episodeId: `${episodeId}-ep${ep.index || dracinIndex}`,
+            animeTitle: dramaTitle,
+            episodeTitle: ep.name || `Episode ${ep.index || dracinIndex}`,
+            poster: '',
+            provider: 'dracin',
+          });
           
           setLoading(false);
           return;
@@ -236,55 +263,54 @@ const Watch = () => {
       }
     };
     fetchEpisodeData();
-  }, [episodeId, location.state?.provider]);
+  }, [episodeId, location.state?.provider, location.state?.episodeIndex, location.state?.dramaTitle]);
 
   // Anti-ads script
   useEffect(() => {
-    // Block popups and redirects
+    // Known ad domains and URL patterns
+    const adPatterns = [
+      'doubleclick.net', 'googlesyndication.com', 'adservice.google',
+      'popads.net', 'popcash.net', 'propellerads.com', 'adsterra.com',
+      'exoclick.com', 'juicyads.com', 'trafficjunky.com', 'clickadu.com',
+      'hilltopads.net', 'ad-maven.com', 'adnium.com',
+    ];
+
+    const isAdUrl = (href) => {
+      if (!href) return false;
+      const lower = href.toLowerCase();
+      return adPatterns.some(domain => lower.includes(domain));
+    };
+
+    // Block only ad popups — don't touch app navigation
     const blockPopups = (e) => {
-      if (e.target.tagName === 'A' && e.target.target === '_blank') {
-        const href = e.target.href || '';
-        if (href.includes('ad') || href.includes('popup') || href.includes('redirect')) {
-          e.preventDefault();
-          e.stopPropagation();
-          return false;
-        }
+      const link = e.target.closest('a[target="_blank"]');
+      if (link && isAdUrl(link.href)) {
+        e.preventDefault();
+        e.stopPropagation();
       }
     };
 
-    // Auto-click skip ad buttons
-    const autoSkipAds = () => {
-      const skipSelectors = [
-        '.skip-ad',
-        '.skip-button',
-        '.ytp-ad-skip-button',
-        '[class*="skip"]',
-        'button[aria-label*="Skip"]',
-      ];
-      
-      skipSelectors.forEach(selector => {
-        const skipBtn = document.querySelector(selector);
-        if (skipBtn && skipBtn.offsetParent !== null) {
-          skipBtn.click();
-        }
-      });
+    // Block window.open hijacking from ad scripts
+    const originalOpen = window.open;
+    window.open = function(url) {
+      if (url && isAdUrl(url)) {
+        console.log('[Anti-ads] Blocked popup:', url);
+        return null;
+      }
+      return originalOpen.apply(this, arguments);
     };
 
-    // Remove ad elements
+    // Remove ad elements from the page (not inside iframes)
     const removeAds = () => {
       const adSelectors = [
-        '.ad-container',
-        '.ads-container',
-        '.advertisement',
-        '[class*="ad-"]',
-        '[id*="ad-"]',
-        'iframe[src*="doubleclick"]',
-        'iframe[src*="googlesyndication"]',
+        '.ad-container', '.ads-container', '.advertisement',
+        'iframe[src*="doubleclick"]', 'iframe[src*="googlesyndication"]',
+        'iframe[src*="popads"]', 'iframe[src*="adsterra"]',
       ];
       
       adSelectors.forEach(selector => {
         document.querySelectorAll(selector).forEach(el => {
-          if (el && el.parentNode) {
+          if (el && el.parentNode && !el.classList.contains('video-iframe')) {
             el.remove();
           }
         });
@@ -292,17 +318,14 @@ const Watch = () => {
     };
 
     document.addEventListener('click', blockPopups, true);
-    
-    const adInterval = setInterval(() => {
-      autoSkipAds();
-      removeAds();
-    }, 1000);
+    const adInterval = setInterval(removeAds, 2000);
 
     return () => {
       document.removeEventListener('click', blockPopups, true);
       clearInterval(adInterval);
+      window.open = originalOpen;
     };
-  }, [videoUrl]);
+  }, []);
 
   const handleServerSelect = (server) => {
     console.log('Selected server:', server);
@@ -358,6 +381,16 @@ const Watch = () => {
     }
   };
 
+  const handleSwitchServer = () => {
+    const qualityData = episodeData?.server?.qualities?.find(q => q.title === selectedQuality);
+    const servers = qualityData?.serverList;
+    if (!servers || servers.length <= 1) return;
+
+    const currentIdx = servers.findIndex(s => s.serverId === selectedServer?.serverId || s.title === selectedServer?.title);
+    const nextIdx = (currentIdx + 1) % servers.length;
+    handleServerSelect(servers[nextIdx]);
+  };
+
   const getEmbedUrl = (url) => {
     if (!url) return '';
 
@@ -385,7 +418,12 @@ const Watch = () => {
     }
 
     // Direct video files → use <video> tag
-    if (url.match(/\.(mp4|webm|ogg|m3u8|mov)$/i)) {
+    if (url.match(/\.(mp4|webm|ogg|m3u8|mov)(\?|$)/i)) {
+      return null; // Signal to use <video> element
+    }
+
+    // CloudFront signed URLs (DramaBox MP4s)
+    if (url.includes('cloudfront.net') || url.includes('dramabox')) {
       return null; // Signal to use <video> element
     }
 
@@ -403,40 +441,64 @@ const Watch = () => {
   }
 
   if (error || !episodeData) {
-    const isNotFound = error?.includes('tidak ditemukan') || error?.includes('404');
+    const isDracinUnavailable = error === 'DRACIN_UNAVAILABLE';
+    const isNotFound = isDracinUnavailable || error?.includes('tidak ditemukan') || error?.includes('404');
     
     return (
       <div className="error-container main-container">
         <div className="error-icon" aria-hidden="true">
-          {isNotFound ? '🔍' : '⚠️'}
+          {isDracinUnavailable ? '📺' : isNotFound ? '🔍' : '⚠️'}
         </div>
-        <h2>{isNotFound ? 'Episode Tidak Ditemukan' : 'Terjadi Kesalahan'}</h2>
+        <h2>{isDracinUnavailable ? 'Episode Belum Tersedia' : isNotFound ? 'Episode Tidak Ditemukan' : 'Terjadi Kesalahan'}</h2>
         <p className="error-message">
-          {error || 'Episode tidak ditemukan'}
+          {isDracinUnavailable 
+            ? 'Episode drama ini sedang tidak tersedia untuk ditonton saat ini.'
+            : error || 'Episode tidak ditemukan'}
         </p>
-        {isNotFound && (
+        {isDracinUnavailable ? (
+          <p className="error-hint">
+            Server streaming untuk drama sedang dalam perbaikan. Silakan coba lagi nanti atau kembali ke halaman detail drama.
+          </p>
+        ) : isNotFound ? (
           <p className="error-hint">
             Episode ini mungkin belum tersedia, sudah dihapus, atau URL-nya salah.
             Coba cek daftar episode di halaman anime.
           </p>
-        )}
+        ) : null}
         <div className="error-actions">
-          <button 
-            type="button" 
-            className="btn btn-primary" 
-            onClick={() => {
-              if (window.history.length > 1) {
-                navigate(-1);
-              } else {
-                navigate('/');
-              }
-            }}
-          >
-            ← Kembali
-          </button>
-          <Link to="/" className="btn btn-secondary">
-            Ke Beranda
-          </Link>
+          {isDracinUnavailable ? (
+            <>
+              <button 
+                type="button" 
+                className="btn btn-primary" 
+                onClick={() => navigate(`/dracin/${episodeId}`)}
+              >
+                ← Kembali ke Detail Drama
+              </button>
+              <Link to="/dracin-latest" className="btn btn-secondary">
+                Lihat Drama Lainnya
+              </Link>
+            </>
+          ) : (
+            <>
+              <button 
+                type="button" 
+                className="btn btn-primary" 
+                onClick={() => {
+                  if (window.history.length > 1) {
+                    navigate(-1);
+                  } else {
+                    navigate('/');
+                  }
+                }}
+              >
+                ← Kembali
+              </button>
+              <Link to="/" className="btn btn-secondary">
+                Ke Beranda
+              </Link>
+            </>
+          )}
         </div>
       </div>
     );
@@ -444,16 +506,21 @@ const Watch = () => {
 
   const embedUrl = getEmbedUrl(videoUrl);
 
+  const isDramaBox = episodeData?.isDramaBox;
   const backAnimeId = animeData?.slug ?? animeData?.animeId ?? animeData?.id ?? episodeData?.animeId ?? episodeData?.animeSlug ?? episodeData?.slug;
-  const hasValidBackLink = backAnimeId != null && String(backAnimeId).trim() !== '';
+  const hasValidBackLink = isDramaBox || (backAnimeId != null && String(backAnimeId).trim() !== '');
+  const backPath = isDramaBox ? `/dracin/${episodeId}` : `/anime/${backAnimeId}`;
+  const backTitle = isDramaBox 
+    ? (episodeData.dramaTitle || 'Drama').substring(0, 40)
+    : (animeData?.title ? (typeof animeData.title === 'string' ? animeData.title.substring(0, 40) : animeData.title) : 'Anime');
 
   return (
     <div className="watch-page main-container">
       <div className="video-header">
         <div className="anime-context">
           {hasValidBackLink ? (
-            <Link to={`/anime/${backAnimeId}`} className="back-link">
-              ← Kembali ke {animeData?.title ? (typeof animeData.title === 'string' ? animeData.title.substring(0, 40) : animeData.title) : 'Anime'}
+            <Link to={backPath} className="back-link">
+              ← Kembali ke {backTitle}
             </Link>
           ) : (
             <button type="button" className="back-link back-link-btn" onClick={() => navigate(-1)}>
@@ -477,6 +544,7 @@ const Watch = () => {
                 preload="metadata"
                 key={videoUrl}
               >
+                <track kind="captions" />
                 Your browser does not support the video tag.
                 <a href={videoUrl} target="_blank" rel="noopener noreferrer">Download video</a>
               </video>
@@ -485,6 +553,7 @@ const Watch = () => {
               <iframe
                 src={embedUrl}
                 className="video-iframe"
+                sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                 allowFullScreen
                 title={episodeData.title}
@@ -510,11 +579,24 @@ const Watch = () => {
         )}
       </div>
 
+      {episodeData?.server?.qualities?.find(q => q.title === selectedQuality)?.serverList?.length > 1 && (
+        <div className="switch-server-hint">
+          <button
+            type="button"
+            className="btn btn-switch-server"
+            onClick={handleSwitchServer}
+          >
+            🔄 Ada Iklan? Ganti Server
+          </button>
+        </div>
+      )}
+
       <div className="video-controls">
         <div className="server-quality-selector">
           <div className="quality-buttons">
             {episodeData?.server?.qualities?.map((q) => (
               <button
+                type="button"
                 key={q.title}
                 className={`quality-btn ${selectedQuality === q.title ? 'active' : ''}`}
                 onClick={() => handleQualityChange(q.title)}
@@ -539,9 +621,10 @@ const Watch = () => {
               <div className="server-menu">
                 {episodeData?.server?.qualities
                   ?.find(q => q.title === selectedQuality)
-                  ?.serverList?.map((server, idx) => (
+                  ?.serverList?.map((server) => (
                     <button
-                      key={idx}
+                      type="button"
+                      key={server.serverId || server.title}
                       className={`server-option ${selectedServer?.serverId === server.serverId ? 'active' : ''}`}
                       onClick={() => handleServerSelect(server)}
                     >
@@ -565,10 +648,11 @@ const Watch = () => {
           </Link>
         )}
         
-        {/* Anime previous */}
+        {/* Anime/DramaBox previous */}
         {episodeData?.hasPrevEpisode && !episodeData?.navigation && (
           <Link
-            to={`/watch/${episodeData.prevEpisode.episodeId}`}
+            to={`/watch/${episodeData.prevEpisode.episodeId || episodeId}`}
+            state={episodeData.isDramaBox ? { provider: 'dracin', episodeIndex: episodeData.prevEpisode.episodeIndex, dramaTitle: episodeData.dramaTitle } : undefined}
             className="nav-btn prev btn btn-secondary"
           >
             ← Episode Sebelumnya
@@ -585,10 +669,11 @@ const Watch = () => {
           </Link>
         )}
         
-        {/* Anime next */}
+        {/* Anime/DramaBox next */}
         {episodeData?.hasNextEpisode && !episodeData?.navigation && (
           <Link
-            to={`/watch/${episodeData.nextEpisode.episodeId}`}
+            to={`/watch/${episodeData.nextEpisode.episodeId || episodeId}`}
+            state={episodeData.isDramaBox ? { provider: 'dracin', episodeIndex: episodeData.nextEpisode.episodeIndex, dramaTitle: episodeData.dramaTitle } : undefined}
             className="nav-btn next btn btn-primary"
           >
             Episode Berikutnya →
@@ -610,8 +695,8 @@ const Watch = () => {
                   {animeData.duration && <div><strong>Durasi:</strong> {animeData.duration}</div>}
                 </div>
                 <div className="genres">
-                  {animeData.genreList?.map((g, idx) => (
-                    <span key={idx} className="genre-tag">{g.title}</span>
+                  {animeData.genreList?.map((g) => (
+                    <span key={g.title} className="genre-tag">{g.title}</span>
                   ))}
                 </div>
               </div>

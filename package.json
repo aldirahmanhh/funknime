@@ -10,6 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@zhadev/dramabox": "^0.0.1",
     "axios": "^1.13.6",
     "node-fetch": "^3.3.2",
     "react": "^19.2.4",
