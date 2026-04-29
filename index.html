@@ -2,65 +2,91 @@
 <html lang="id">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/png" href="/logo.png" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="512x512" href="/logo.png" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    
-    <!-- Mobile Optimization -->
+    <link rel="apple-touch-icon" href="/logo.png" />
+
+    <!-- Viewport -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover" />
+
+    <!-- PWA -->
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="MrFunk" />
-    
-    <!-- Theme Color -->
-    <meta name="theme-color" content="#FF1493" />
-    <meta name="msapplication-TileColor" content="#FF1493" />
-    
-    <!-- SEO -->
-    <meta name="description" content="Streaming anime sub Indo terlengkap dengan katalog gabungan Otakudesu & Samehadaku. Nonton anime ongoing dan completed gratis!" />
-    <meta name="keywords" content="anime, streaming anime, anime sub indo, otakudesu, samehadaku, nonton anime, anime gratis" />
-    <meta name="author" content="Funknime" />
-    
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website" />
-    <meta property="og:title" content="Funknime - Streaming Anime Sub Indo" />
-    <meta property="og:description" content="Nonton anime sub Indo terlengkap gratis!" />
-    <meta property="og:image" content="/og-image.png" />
-    
-    <!-- Twitter -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Funknime - Streaming Anime Sub Indo" />
-    <meta name="twitter:description" content="Nonton anime sub Indo terlengkap gratis!" />
-    
-    <!-- PWA Manifest -->
+    <meta name="theme-color" content="#9333EA" />
+    <meta name="msapplication-TileColor" content="#9333EA" />
     <link rel="manifest" href="/manifest.json" />
-    
-    <!-- Apple Touch Icons -->
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
-    
-    <!-- Fonts -->
+
+    <!-- Primary SEO -->
+    <title>MrFunk - Nonton Anime Sub Indo Gratis | Streaming Anime & Donghua Terlengkap</title>
+    <meta name="description" content="MrFunk — Nonton anime sub Indo gratis terlengkap! Streaming anime ongoing, completed, dan donghua dari Otakudesu & Samehadaku. Update episode terbaru setiap hari, tanpa ribet." />
+    <meta name="keywords" content="nonton anime sub indo, streaming anime gratis, anime ongoing 2026, anime completed, donghua sub indo, otakudesu, samehadaku, nonton anime online, anime terbaru, mrfunk" />
+    <meta name="author" content="MrFunk" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+    <link rel="canonical" href="https://kenkazumi.biz.id" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="MrFunk" />
+    <meta property="og:title" content="MrFunk - Nonton Anime Sub Indo Gratis | Streaming Terlengkap" />
+    <meta property="og:description" content="Streaming anime & donghua sub Indo gratis dari Otakudesu & Samehadaku. Update terbaru setiap hari." />
+    <meta property="og:image" content="https://kenkazumi.biz.id/logo.png" />
+    <meta property="og:image:width" content="512" />
+    <meta property="og:image:height" content="512" />
+    <meta property="og:url" content="https://kenkazumi.biz.id" />
+    <meta property="og:locale" content="id_ID" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="MrFunk - Nonton Anime Sub Indo Gratis" />
+    <meta name="twitter:description" content="Streaming anime & donghua sub Indo terlengkap. Gratis, update setiap hari." />
+    <meta name="twitter:image" content="https://kenkazumi.biz.id/logo.png" />
+
+    <!-- Schema.org JSON-LD -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "MrFunk",
+      "alternateName": "MrFunk Anime",
+      "url": "https://kenkazumi.biz.id",
+      "description": "Nonton anime sub Indo gratis terlengkap. Streaming anime ongoing, completed, dan donghua.",
+      "inLanguage": "id",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://kenkazumi.biz.id/search?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "MrFunk",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://kenkazumi.biz.id/logo.png"
+        }
+      }
+    }
+    </script>
+
+    <!-- Preconnect -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Bricolage+Grotesque:wght@600;700;800&display=swap" rel="stylesheet" />
-    
-    <title>MrFunk - Streaming Anime & Donghua Sub Indo Terlengkap</title>
+    <link rel="preconnect" href="https://www.sankavollerei.com" />
+    <link rel="dns-prefetch" href="https://www.sankavollerei.com" />
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
     <script>
-      // Register Service Worker
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
-            .then(registration => {
-              console.log('SW registered:', registration);
-            })
-            .catch(error => {
-              console.log('SW registration failed:', error);
-            });
+          navigator.serviceWorker.register('/sw.js').catch(() => {});
         });
       }
     </script>
