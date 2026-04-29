@@ -1,55 +1,70 @@
-import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { animeAPI } from '../services/api';
-
-const WatchLoading = () => {
-  const { episodeId } = useParams();
-  const [episodeData, setEpisodeData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    const fetchEpisodeData = async () => {
-      try {
-        const data = await animeAPI.getEpisodeDetail(episodeId);
-        setEpisodeData(data?.data || null);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchEpisodeData();
-  }, [episodeId]);
-
-  if (loading) return (
-    <div className="loading-container">
-      <div className="spinner"></div>
-      <p>Loading video...</p>
-    </div>
-  );
-
-  if (error || !episodeData) return (
-    <div className="error-container">
-      <p className="error-message">Video not available: {error || 'Episode not found'}</p>
-      <button onClick={() => window.location.reload()}>Retry</button>
-    </div>
-  );
-
+/**
+ * Overlay shown when switching server/quality in Watch page.
+ * Shows a spinner + message over the video player area.
+ */
+const WatchLoading = ({ message = 'Mengganti server...', serverName }) => {
   return (
-    <div className="watch-loading">
-      <div className="loading-content">
-        <div className="loading-spinner">
-          <div className="spinner"></div>
-          <p>Loading video...</p>
-        </div>
-        <div className="episode-info">
-          <h2>{episodeData.title}</h2>
-          <p>Preparing video player...</p>
-          <div className="progress-bar">
-            <div className="progress" style={{ width: '75%' }}></div>
-          </div>
-        </div>
+    <div style={{
+      position: 'absolute',
+      inset: 0,
+      background: 'rgba(10, 10, 15, 0.85)',
+      backdropFilter: 'blur(6px)',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: '12px',
+      zIndex: 10,
+      borderRadius: 'inherit',
+      animation: 'fadeIn 0.2s ease-out',
+    }}>
+      {/* Spinner */}
+      <div style={{
+        width: '40px',
+        height: '40px',
+        border: '3px solid var(--color-border)',
+        borderTopColor: 'var(--color-primary)',
+        borderRadius: '50%',
+        animation: 'spin 0.7s linear infinite',
+      }} />
+
+      {/* Message */}
+      <div style={{ textAlign: 'center' }}>
+        <p style={{
+          color: 'var(--color-text)',
+          fontSize: 'var(--text-sm)',
+          fontWeight: 700,
+          marginBottom: '4px',
+        }}>
+          {message}
+        </p>
+        {serverName && (
+          <p style={{
+            color: 'var(--color-primary)',
+            fontSize: 'var(--text-xs)',
+            fontWeight: 600,
+          }}>
+            → {serverName}
+          </p>
+        )}
+      </div>
+
+      {/* Progress bar animation */}
+      <div style={{
+        width: '120px',
+        height: '3px',
+        background: 'var(--color-border)',
+        borderRadius: '4px',
+        overflow: 'hidden',
+        marginTop: '4px',
+      }}>
+        <div style={{
+          height: '100%',
+          background: 'var(--color-primary)',
+          borderRadius: '4px',
+          animation: 'shimmer 1.2s ease-in-out infinite',
+          width: '60%',
+        }} />
       </div>
     </div>
   );

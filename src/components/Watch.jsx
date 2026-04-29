@@ -5,6 +5,7 @@ import { addToWatchHistory, updateWatchProgress, getWatchProgress } from '../uti
 import { createPlayer } from '@videojs/react';
 import { VideoSkin, Video, videoFeatures } from '@videojs/react/video';
 import '@videojs/react/video/skin.css';
+import WatchLoading from './WatchLoading';
 
 const Player = createPlayer({ features: videoFeatures });
 
@@ -19,6 +20,8 @@ const Watch = () => {
   const [selectedQuality, setSelectedQuality] = useState('480p');
   const [selectedServer, setSelectedServer] = useState(null);
   const [videoUrl, setVideoUrl] = useState('');
+  const [switching, setSwitching] = useState(false);
+  const [switchLabel, setSwitchLabel] = useState('');
   const videoElRef = useRef(null);
   const saveTimerRef = useRef(null);
 
@@ -136,6 +139,7 @@ const Watch = () => {
 
     const onLoaded = () => {
       if (savedTime > 5) vid.currentTime = savedTime;
+      setSwitching(false);
     };
     const onPause = () => {
       if (vid.currentTime > 5) updateWatchProgress(episodeId, vid.currentTime, vid.duration);
@@ -176,20 +180,45 @@ const Watch = () => {
     return () => { document.removeEventListener('click', block, true); window.open = orig; };
   }, []);
 
+  // Clear switching overlay when video loads
+  useEffect(() => {
+    if (!switching) return;
+    const timer = setTimeout(() => setSwitching(false), 3000); // fallback: auto-hide after 3s
+    return () => clearTimeout(timer);
+  }, [videoUrl, switching]);
+
   // ─── Handlers ───
   const handleServerSelect = (server) => {
-    saveProgress(); // save before switching
+    saveProgress();
+    setSwitching(true);
+    setSwitchLabel(server.title || 'Server');
     if (server.href) {
       const sid = server.serverId || server.href.split('/').pop();
-      animeAPI.getStreamingServer(sid).then(d => { if (d?.data?.url) setVideoUrl(d.data.url); }).catch(() => { if (episodeData?.defaultStreamingUrl) setVideoUrl(episodeData.defaultStreamingUrl); });
-    } else if (server.url) { setVideoUrl(server.url); }
+      animeAPI.getStreamingServer(sid).then(d => {
+        if (d?.data?.url) setVideoUrl(d.data.url);
+        else setSwitching(false);
+      }).catch(() => {
+        if (episodeData?.defaultStreamingUrl) setVideoUrl(episodeData.defaultStreamingUrl);
+        setSwitching(false);
+      });
+    } else if (server.url) {
+      setVideoUrl(server.url);
+    } else {
+      setSwitching(false);
+    }
     setSelectedServer(server);
   };
 
   const handleQualityChange = (quality) => {
     setSelectedQuality(quality);
+    setSwitching(true);
+    setSwitchLabel(quality);
     const servers = episodeData?.server?.qualities?.find(q => q.title === quality)?.serverList;
-    if (servers?.length > 0) handleServerSelect(servers.find(s => s.title?.toLowerCase().includes('ondesu')) || servers[0]);
+    if (servers?.length > 0) {
+      handleServerSelect(servers.find(s => s.title?.toLowerCase().includes('ondesu')) || servers[0]);
+    } else {
+      setSwitching(false);
+    }
   };
 
   // Known iframe-only domains (embed players that can't be played via Video.js)
@@ -254,7 +283,8 @@ const Watch = () => {
       <h1 style={{ fontSize: 'var(--text-xl)', fontWeight: 800, marginBottom: '16px' }}>{episodeData.title}</h1>
 
       {/* Video Player */}
-      <div className="video-player-wrapper">
+      <div className="video-player-wrapper" style={{ position: 'relative' }}>
+        {switching && <WatchLoading message="Mengganti server..." serverName={switchLabel} />}
         {videoUrl ? (
           embedUrl === null ? (
             /* Direct video → @videojs/react */
@@ -269,7 +299,7 @@ const Watch = () => {
               </VideoSkin>
             </Player.Provider>
           ) : embedUrl ? (
-            <iframe src={embedUrl} sandbox="allow-scripts allow-same-origin allow-forms allow-presentation" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen title={episodeData.title} style={{ width: '100%', height: '100%', border: 'none' }} />
+            <iframe src={embedUrl} sandbox="allow-scripts allow-same-origin allow-forms allow-presentation" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen title={episodeData.title} style={{ width: '100%', height: '100%', border: 'none' }} onLoad={() => setSwitching(false)} />
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
               <a href={videoUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary">Buka Video →</a>
