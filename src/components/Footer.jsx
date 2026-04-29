@@ -22,7 +22,7 @@ const Footer = () => {
     setReportText('');
   };
   const handleSendReport = () => {
-    const subject = encodeURIComponent('[Funknime] Laporan Bug / Error');
+    const subject = encodeURIComponent('[MrFunk] Laporan Bug / Error');
     const body = encodeURIComponent(
       `Deskripsi error/bug:\n\n${reportText || '(Jelaskan masalah yang kamu temukan)'}\n\n---\nHalaman: ${typeof window !== 'undefined' ? window.location.href : ''}`
     );
@@ -37,7 +37,7 @@ const Footer = () => {
           <div className="footer-brand">
             <Link to="/" className="footer-logo">
               <span className="footer-emoji" aria-hidden>🔥</span>
-              <span className="footer-text">Funknime</span>
+              <span className="footer-text">MrFunk</span>
             </Link>
             <p className="footer-tagline">Streaming anime sub Indonesia. Nonton anime terbaru online.</p>
           </div>
@@ -56,7 +56,7 @@ const Footer = () => {
             </ul>
           </nav>
           <div className="footer-bottom">
-            <p className="footer-copy">© {currentYear} Funknime. Semua hak dilindungi.</p>
+            <p className="footer-copy">© {currentYear} MrFunk. Semua hak dilindungi.</p>
           </div>
         </div>
       </footer>

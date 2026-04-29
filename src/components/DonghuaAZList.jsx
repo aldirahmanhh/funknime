@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
 import { animeAPI } from '../services/api';
 import AnimeCard from './AnimeCard';
 
@@ -16,9 +15,9 @@ const DonghuaAZList = () => {
     const fetchDonghua = async () => {
       try {
         setLoading(true);
+        setError(null);
         const response = await animeAPI.getDonghuaAZList(selectedLetter, page);
-        const donghuaList = response?.donghua_list || [];
-        setDonghua(donghuaList);
+        setDonghua(response?.donghua_list || []);
       } catch (err) {
         setError(err?.message ?? 'Gagal memuat donghua');
       } finally {
@@ -28,79 +27,61 @@ const DonghuaAZList = () => {
     fetchDonghua();
   }, [selectedLetter, page]);
 
-  const handleLetterChange = (letter) => {
-    setSelectedLetter(letter);
-    setPage(1);
-  };
-
   return (
     <div className="main-container">
       <header className="page-header">
-        <h1 className="main-title">Donghua A-Z</h1>
-        <p className="subtitle">Browse by alphabet</p>
+        <h1 className="main-title text-gradient">Donghua A-Z</h1>
+        <p className="subtitle">Browse donghua berdasarkan abjad</p>
       </header>
 
-      <div className="az-navigation">
+      {/* A-Z Buttons */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', justifyContent: 'center', marginBottom: 'var(--space-6)' }}>
         {letters.map(letter => (
           <button
             key={letter}
-            className={`az-btn ${selectedLetter === letter ? 'active' : ''}`}
-            onClick={() => handleLetterChange(letter)}
+            type="button"
+            onClick={() => { setSelectedLetter(letter); setPage(1); }}
+            style={{
+              width: '38px', height: '38px',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: selectedLetter === letter ? 'var(--color-primary)' : 'var(--color-surface)',
+              color: selectedLetter === letter ? '#fff' : 'var(--color-text-muted)',
+              border: `1px solid ${selectedLetter === letter ? 'var(--color-primary)' : 'var(--color-border)'}`,
+              borderRadius: 'var(--radius-sm)',
+              fontWeight: 700, fontSize: 'var(--text-sm)',
+              cursor: 'pointer', transition: 'all 0.15s ease',
+            }}
           >
             {letter.toUpperCase()}
           </button>
         ))}
       </div>
 
-      {loading && (
-        <div className="loading-container">
-          <div className="spinner" />
-        </div>
-      )}
-
-      {error && <div className="error-message">{error}</div>}
+      {loading && <div className="loading-container"><div className="spinner" /></div>}
+      {error && <div className="error-container"><p className="error-message">{error}</p></div>}
 
       {!loading && donghua.length > 0 && (
         <>
-          <p className="results-count">{donghua.length} donghua dengan huruf "{selectedLetter.toUpperCase()}"</p>
+          <p style={{ textAlign: 'center', color: 'var(--color-text-muted)', fontSize: 'var(--text-sm)', marginBottom: 'var(--space-4)' }}>
+            {donghua.length} donghua dengan huruf "{selectedLetter.toUpperCase()}"
+          </p>
           <div className="anime-grid">
             {donghua.map((item, idx) => (
-              <AnimeCard
-                key={item.slug || idx}
-                anime={{
-                  ...item,
-                  animeId: item.slug,
-                  title: item.title,
-                  poster: item.poster,
-                  status: item.status,
-                  type: item.type,
-                  provider: 'donghua',
-                }}
-                index={idx}
-                providerHint="Donghua"
-              />
+              <AnimeCard key={item.slug || idx} anime={{ ...item, animeId: item.slug, provider: 'donghua' }} index={idx} providerHint="Donghua" />
             ))}
           </div>
         </>
       )}
 
-      {!loading && donghua.length === 0 && (
-        <div className="empty-state">
-          <p>Tidak ada donghua dengan huruf "{selectedLetter.toUpperCase()}"</p>
-        </div>
+      {!loading && donghua.length === 0 && !error && (
+        <div className="empty-state"><p>Tidak ada donghua dengan huruf "{selectedLetter.toUpperCase()}"</p></div>
       )}
 
       {donghua.length >= 10 && (
         <div className="pagination">
-          {page > 1 && (
-            <button className="btn btn-secondary" onClick={() => setPage(page - 1)}>
-              ← Previous
-            </button>
-          )}
-          <span className="btn">Page {page}</span>
-          <button className="btn btn-primary" onClick={() => setPage(page + 1)}>
-            Next →
-          </button>
+          {page > 1 && <button className="btn btn-secondary" onClick={() => setPage(page - 1)}>← Prev</button>}
+          <span className="page-info">Hal {page}</span>
+          <button className="btn btn-primary" onClick={() => setPage(page + 1)}>Next →</button>
         </div>
       )}
     </div>

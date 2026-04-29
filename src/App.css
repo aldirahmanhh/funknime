@@ -149,6 +149,7 @@
   color: var(--color-primary); text-decoration: none;
   font-weight: 600; font-size: var(--text-sm);
   transition: color var(--transition-fast);
+  font-family: var(--font-sans);
 }
 .back-link:hover { color: var(--color-primary-light); }
 

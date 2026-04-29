@@ -8,11 +8,11 @@
   --breakpoint-lg: 1024px;
   --breakpoint-xl: 1280px;
 
-  /* DARK NEOBRUTALISM PALETTE */
-  --color-primary: #FF3E9A;
-  --color-primary-light: #FF6BB5;
-  --color-secondary: #00E5FF;
-  --color-accent: #FFEA00;
+  /* MRFUNK PURPLE PALETTE */
+  --color-primary: #9333EA;
+  --color-primary-light: #A855F7;
+  --color-secondary: #06B6D4;
+  --color-accent: #F59E0B;
   --color-success: #00E676;
   --color-error: #FF1744;
   --color-warning: #FF9100;
@@ -28,8 +28,8 @@
   --color-text-dim: #55556A;
   --color-border: #2A2A3A;
   --color-border-strong: #F0F0F5;
-  --color-glow: rgba(255, 62, 154, 0.15);
-  --color-glow-cyan: rgba(0, 229, 255, 0.12);
+  --color-glow: rgba(147, 51, 234, 0.2);
+  --color-glow-cyan: rgba(6, 182, 212, 0.12);
 
   /* Typography */
   --font-sans: 'Space Grotesk', system-ui, -apple-system, sans-serif;
@@ -676,6 +676,7 @@ input::placeholder { color: var(--color-text-dim); }
   --color-border-strong: #0A0A0F;
   --color-glow: rgba(255, 62, 154, 0.08);
   --color-glow-cyan: rgba(0, 229, 255, 0.06);
-  --color-primary: #E0357F;
+  --color-primary: #7C3AED;
+  --color-glow: rgba(124, 58, 237, 0.1);
   color-scheme: light;
 }

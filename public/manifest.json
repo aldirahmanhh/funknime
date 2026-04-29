@@ -1,11 +1,11 @@
 {
-  "name": "Funknime - Streaming Anime Sub Indo",
-  "short_name": "Funknime",
-  "description": "Streaming anime sub Indo terlengkap dengan katalog gabungan Otakudesu & Samehadaku",
+  "name": "MrFunk - Streaming Anime Sub Indo",
+  "short_name": "MrFunk",
+  "description": "Nonton anime & donghua sub Indo terlengkap gratis dengan katalog gabungan Otakudesu & Samehadaku",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#FFFFFF",
-  "theme_color": "#FF1493",
+  "theme_color": "#9333EA",
   "orientation": "portrait-primary",
   "scope": "/",
   "icons": [

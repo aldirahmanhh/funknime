@@ -1,143 +1,122 @@
-# 🎬 Anime Streaming Website
+# 🎬 MrFunk — Anime Streaming Platform
 
-Modern anime streaming website built using **Vite.js** and powered by the **Sankavollerei Anime REST API**.
+<div align="center">
 
-This project allows users to browse anime, search titles, view anime details, and stream episodes from multiple sources such as Otakudesu, Samehadaku, Kusonime, and more.
+**MrFunk** is a modern anime & donghua streaming platform built with **React + Vite**, powered by the [Sankavollerei Anime REST API](https://www.sankavollerei.com/anime/).
 
----
+Stream anime sub Indo with a combined catalog from **Otakudesu** & **Samehadaku** — all in one place.
 
-# ✨ Features
+[🌐 Live Demo](https://mrfunk.vercel.app) · [☕ Support via Trakteer](https://trakteer.id/aldirahmanhh)
 
-- 🔍 Anime Search
-- 📺 Episode Streaming
-- 🎞 Anime Detail Pages
-- 🆕 Latest Anime Updates
-- 🔥 Popular Anime
-- 📅 Anime Schedule
-- 🎭 Browse by Genre
-- 📱 Responsive Design
-- ⚡ Fast build using Vite
-- 🌸 Neobrutalism UI & Sakura-style background
+</div>
 
 ---
 
-# 🛠 Tech Stack
+## ✨ Features
 
-- Vite.js
-- JavaScript / React
-- Fetch API / Axios
-- Sankavollerei Anime API
+- 🔍 **Unified Search** — Search across Otakudesu & Samehadaku simultaneously
+- 📺 **Multi-Provider Streaming** — Auto-fallback between providers for best availability
+- 🐉 **Donghua Support** — Full donghua catalog with genres, A-Z list, and streaming
+- 📅 **Schedule** — Daily anime airing schedule
+- 🎭 **Genre Browser** — Browse anime by genre from multiple providers
+- 🔤 **A-Z List** — Alphabetical anime & donghua browsing
+- 🕐 **Watch History** — Resume from last watched minute/second with progress bar
+- ☕ **Trakteer Integration** — Donation system with top donor leaderboard
+- 🎨 **Dark Neobrutalism UI** — Purple-themed modern design with smooth animations
+- 📱 **Fully Responsive** — Optimized for mobile, tablet, and desktop
+- ⚡ **PWA Ready** — Installable as a Progressive Web App
+- 🛡️ **Anti-Ads** — Built-in ad popup blocker for streaming iframes
 
 ---
 
-# 🌐 API Source
+## 🛠 Tech Stack
 
-Base API URL:
+| Technology | Purpose |
+|---|---|
+| **React 19** | UI Framework |
+| **Vite 8** | Build Tool |
+| **React Router 7** | Client-side Routing |
+| **Sankavollerei API** | Anime Data Source |
+| **Trakteer API** | Donation Integration |
+| **Vercel** | Hosting & Deployment |
+
+---
+
+## 🌐 API Credits
+
+This project uses the **Sankavollerei Anime REST API** as its primary data source:
+
 ```
-https://www.sankavollerei.com/anime/
+Base URL: https://www.sankavollerei.com/anime/
+Rate Limit: 50 requests/minute
 ```
-API Rate Limit: **50 requests/minute**
 
-Make sure to implement caching and avoid excessive API calls.
+**Huge thanks to [Sanka Vollerei](https://www.sankavollerei.com)** for providing this free anime API! 🙏
 
 ---
 
-# 📦 Installation
+## 📦 Installation
 
-Clone the repository:
 ```bash
+# Clone the repository
 git clone https://github.com/aldirahmanhh/Funknime.git
 cd Funknime
-```
 
-Install dependencies:
-```bash
+# Install dependencies
 npm install
-```
 
-Run dev server:
-```bash
+# Run development server
 npm run dev
-```
 
-Build for production:
-```bash
+# Build for production
 npm run build
 ```
 
 ---
 
-# 📁 Project Structure
+## 📁 Project Structure
 
 ```
-Funknime
-├── src
-│   ├── components    # Header, Home, AnimeCard, Search, Watch, etc.
-│   ├── contexts      # ThemeContext
-│   ├── hooks         # useDebounce, useInfiniteScroll
-│   ├── services      # api.js
-│   ├── App.jsx
-│   ├── App.css
-│   ├── main.jsx
-│   └── index.css
-├── public
-└── index.html
-```
-
----
-
-# 🔌 Example API Request
-
-- Get latest anime
-```js
-fetch("https://www.sankavollerei.com/anime/home")
-  .then(res => res.json())
-  .then(data => console.log(data))
-```
-- Search anime
-```js
-fetch("https://www.sankavollerei.com/anime/search/naruto")
-```
-- Get anime detail
-```js
-fetch("https://www.sankavollerei.com/anime/anime/naruto")
-```
-- Get episode streaming
-```js
-fetch("https://www.sankavollerei.com/anime/episode/naruto-episode-1")
+MrFunk/
+├── src/
+│   ├── components/     # React components (Home, Watch, AnimeCard, etc.)
+│   ├── contexts/       # ThemeContext
+│   ├── hooks/          # useDebounce, useInfiniteScroll
+│   ├── services/       # API service layer
+│   ├── utils/          # Watch history utilities
+│   ├── App.jsx         # Main app with routing
+│   └── main.jsx        # Entry point
+├── public/             # Static assets, PWA manifest
+└── index.html          # HTML template with SEO meta tags
 ```
 
 ---
 
-# ⚠️ API Best Practices
+## ☕ Support
 
-Because the API has a rate limit of 50 requests per minute, it is recommended to:
+If you enjoy using MrFunk, consider supporting the project:
 
-- Implement API caching
-- Use debounce on search input
-- Avoid repeated API calls
-- Use pagination where available
-- Load data lazily when possible
+- **[Trakteer](https://trakteer.id/aldirahmanhh)** — Buy me a coffee! ☕
+- **Star this repo** ⭐ — It helps a lot!
 
 ---
 
-# 🚀 Future Improvements
+## 📜 Disclaimer
 
-- [ ] ⭐ Anime Watchlist
-- [ ] 👤 User Accounts
-- [ ] 💬 Comment System
-- [ ] 🎬 Auto Next Episode
-- [ ] 📱 Progressive Web App (PWA)
-- [ ] 🔔 Anime Notifications
+This project is created for **educational purposes only**. All anime content and streaming sources belong to their respective owners. We do not host any video content.
 
 ---
 
-# 📜 License
+## 📄 License
 
-This project is created for educational purposes only. All anime content and streaming sources belong to their respective owners.
+MIT License — feel free to fork and modify.
 
 ---
 
-# Made with ❤️
+<div align="center">
 
-[Funknime](https://github.com/aldirahmanhh/Funknime) – by [aldirahmanhh](https://github.com/aldirahmanhh)
+Made with 💜 by [aldirahmanhh](https://github.com/aldirahmanhh)
+
+**API powered by [Sankavollerei](https://www.sankavollerei.com)** 🙏
+
+</div>

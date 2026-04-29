@@ -7,6 +7,7 @@ import AnimeCarousel from './AnimeCarousel';
 import Footer from './Footer';
 import { getWatchHistory, formatTime } from '../utils/watchHistory';
 
+const TRAKTEER_API_KEY = 'trapi-5JwaDliojNeKNsw5jPiI4Awa';
 const DAY_ORDER = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 
 const Home = () => {
@@ -16,18 +17,13 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [watchHistory, setWatchHistory] = useState([]);
+  const [topDonors, setTopDonors] = useState([]);
+  const [showDonatePopup, setShowDonatePopup] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [
-          homeRes,
-          sameOngoingRes,
-          sameCompletedRes,
-          scheduleRes,
-          donghuaOngoingRes,
-          donghuaCompletedRes,
-        ] = await Promise.all([
+        const [homeRes, sameOngoingRes, sameCompletedRes, scheduleRes, donghuaOngoingRes, donghuaCompletedRes] = await Promise.all([
           animeAPI.getHome(),
           animeAPI.getOngoingSamehadaku().catch(() => null),
           animeAPI.getCompletedSamehadaku().catch(() => null),
@@ -41,80 +37,52 @@ const Home = () => {
         const sameOngoing = sameOngoingRes?.data?.animeList || [];
         const sameCompleted = sameCompletedRes?.data?.animeList || [];
 
-        const normalizeKey = (item) => {
-          const raw = (item.title || item.name || '').toString().toLowerCase();
-          return raw.replace(/\s+/g, ' ').trim();
-        };
+        const normalizeKey = (item) => (item.title || item.name || '').toString().toLowerCase().replace(/\s+/g, '').trim();
 
         const mergeLists = (otakList, sameList, status) => {
           const map = new Map();
-
           otakList.forEach((a) => {
             const key = normalizeKey(a);
-            const existing = map.get(key);
-            const base = existing || {};
-            map.set(key, {
-              ...base,
-              ...a,
-              providers: base.providers
-                ? Array.from(new Set([...base.providers, 'otakudesu']))
-                : ['otakudesu'],
-              provider: 'otakudesu',
-              status,
-            });
+            const existing = map.get(key) || {};
+            map.set(key, { ...existing, ...a, providers: [...new Set([...(existing.providers || []), 'otakudesu'])], provider: 'otakudesu', status });
           });
-
           sameList.forEach((a) => {
             const key = normalizeKey(a);
             const existing = map.get(key);
             if (existing) {
-              const providers = existing.providers
-                ? Array.from(new Set([...existing.providers, 'samehadaku']))
-                : ['samehadaku'];
-              map.set(key, {
-                ...existing,
-                providers,
-              });
+              map.set(key, { ...existing, providers: [...new Set([...(existing.providers || []), 'samehadaku'])] });
             } else {
-              map.set(key, {
-                ...a,
-                providers: ['samehadaku'],
-                provider: 'samehadaku',
-                status,
-              });
+              map.set(key, { ...a, providers: ['samehadaku'], provider: 'samehadaku', status });
             }
           });
-
           return Array.from(map.values());
         };
 
-        const mergedOngoing = mergeLists(otakOngoing, sameOngoing, 'Ongoing');
-        const mergedCompleted = mergeLists(otakCompleted, sameCompleted, 'Completed');
-
-        setHomeData({
-          ongoing: mergedOngoing,
-          completed: mergedCompleted,
-        });
-
-        // Donghua data
-        const donghuaOngoing = donghuaOngoingRes?.ongoing_donghua || [];
-        const donghuaCompleted = donghuaCompletedRes?.completed_donghua || [];
-        
-        setDonghuaData({
-          ongoing: donghuaOngoing,
-          completed: donghuaCompleted,
-        });
-
+        setHomeData({ ongoing: mergeLists(otakOngoing, sameOngoing, 'Ongoing'), completed: mergeLists(otakCompleted, sameCompleted, 'Completed') });
+        setDonghuaData({ ongoing: donghuaOngoingRes?.ongoing_donghua || [], completed: donghuaCompletedRes?.completed_donghua || [] });
         if (scheduleRes?.data) setScheduleData(scheduleRes);
       } catch (err) {
         setError(err?.message ?? 'Gagal memuat data');
-        console.error('Fetch error:', err);
       } finally {
         setLoading(false);
       }
     };
     fetchData();
     setWatchHistory(getWatchHistory());
+
+    // Fetch Trakteer top donors
+    fetch('https://api.trakteer.id/v1/public/supports?limit=10&page=1', {
+      headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'key': TRAKTEER_API_KEY },
+    }).then(r => r.json()).then(d => {
+      if (d?.result?.data) setTopDonors(d.result.data);
+    }).catch(() => {});
+
+    // Show donate popup after 30s for first-time visitors
+    const shown = sessionStorage.getItem('donate_popup_shown');
+    if (!shown) {
+      const timer = setTimeout(() => { setShowDonatePopup(true); sessionStorage.setItem('donate_popup_shown', '1'); }, 30000);
+      return () => clearTimeout(timer);
+    }
   }, []);
 
   if (loading) {
@@ -123,19 +91,8 @@ const Home = () => {
         <header className="page-header home-hero">
           <div className="skeleton skeleton-text" style={{ height: 40, width: 240 }} />
           <div className="skeleton skeleton-text" style={{ height: 20, width: 320, marginTop: 12 }} />
-          <div style={{ marginTop: 24, display: 'flex', gap: 12, justifyContent: 'center' }}>
-            <div className="skeleton" style={{ width: 120, height: 44 }} />
-            <div className="skeleton" style={{ width: 100, height: 44 }} />
-          </div>
         </header>
-        <section className="section">
-          <div className="skeleton skeleton-text" style={{ height: 28, width: 140, marginBottom: 20 }} />
-          <SkeletonAnimeGrid count={6} />
-        </section>
-        <section className="section">
-          <div className="skeleton skeleton-text" style={{ height: 28, width: 160, marginBottom: 20 }} />
-          <SkeletonAnimeGrid count={6} />
-        </section>
+        <section className="section"><SkeletonAnimeGrid count={6} /></section>
       </div>
     );
   }
@@ -143,12 +100,8 @@ const Home = () => {
   if (error) {
     return (
       <div className="error-container main-container">
-        <p className="error-message">Gagal memuat anime: {error}</p>
-        <p className="error-hint">Periksa koneksi internet atau coba lagi nanti.</p>
-        <button type="button" className="btn btn-primary" onClick={() => window.location.reload()}>
-          Coba Lagi
-        </button>
-        <Link to="/" className="btn btn-secondary" style={{ marginTop: 8 }}>Kembali ke Beranda</Link>
+        <p className="error-message">Gagal memuat: {error}</p>
+        <button type="button" className="btn btn-primary" onClick={() => window.location.reload()}>Coba Lagi</button>
       </div>
     );
   }
@@ -164,56 +117,51 @@ const Home = () => {
       if (isDonghua) {
         return (
           <div className="home-rail-card" key={anime.slug ?? idx}>
-            <AnimeCard
-              anime={{
-                ...anime,
-                animeId: anime.slug,
-                provider: 'donghua',
-              }}
-              index={idx}
-              statusOverride={statusOverride}
-              providerHint="Donghua"
-            />
+            <AnimeCard anime={{ ...anime, animeId: anime.slug, provider: 'donghua' }} index={idx} statusOverride={statusOverride} providerHint="Donghua" />
           </div>
         );
       }
-
       const providers = anime.providers || (anime.provider ? [anime.provider] : []);
       const hasOtak = providers.includes('otakudesu');
       const hasSame = providers.includes('samehadaku');
-
       let providerHint = 'Otakudesu';
       if (hasOtak && hasSame) providerHint = 'Otakudesu & Samehadaku';
       else if (hasSame) providerHint = 'Samehadaku';
-
       return (
         <div className="home-rail-card" key={anime.animeId ?? anime.slug ?? idx}>
-          <AnimeCard
-            anime={{
-              ...anime,
-              provider: hasOtak ? 'otakudesu' : (hasSame ? 'samehadaku' : anime.provider),
-            }}
-            index={idx}
-            statusOverride={statusOverride}
-            providerHint={providerHint}
-          />
+          <AnimeCard anime={{ ...anime, provider: hasOtak ? 'otakudesu' : (hasSame ? 'samehadaku' : anime.provider) }} index={idx} statusOverride={statusOverride} providerHint={providerHint} />
         </div>
       );
     });
 
-  const popularList = ongoing.length >= 4 ? ongoing : [...ongoing, ...completed].slice(0, 10);
-
   return (
     <div className="home-container main-container">
+      {/* Donate Popup */}
+      {showDonatePopup && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', backdropFilter: 'blur(4px)' }} onClick={() => setShowDonatePopup(false)}>
+          <div style={{ background: 'var(--color-surface)', border: '2px solid var(--color-border)', borderRadius: '16px', padding: '32px', maxWidth: '420px', width: '100%', textAlign: 'center', position: 'relative' }} onClick={e => e.stopPropagation()}>
+            <button onClick={() => setShowDonatePopup(false)} style={{ position: 'absolute', top: '12px', right: '16px', background: 'none', border: 'none', color: 'var(--color-text-muted)', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
+            <div style={{ fontSize: '3rem', marginBottom: '12px' }}>☕</div>
+            <h2 style={{ fontSize: 'var(--text-xl)', marginBottom: '8px' }}>Dukung MrFunk!</h2>
+            <p style={{ color: 'var(--color-text-muted)', fontSize: 'var(--text-sm)', marginBottom: '20px', lineHeight: 1.6 }}>
+              Bantu kami tetap online & berkembang dengan donasi melalui Trakteer. Setiap dukungan sangat berarti! 💜
+            </p>
+            <a href="https://trakteer.id/aldirahmanhh" target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginBottom: '8px' }}>
+              ☕ Trakteer Sekarang
+            </a>
+            <button onClick={() => setShowDonatePopup(false)} style={{ background: 'none', border: 'none', color: 'var(--color-text-dim)', fontSize: 'var(--text-xs)', cursor: 'pointer', marginTop: '8px' }}>Nanti saja</button>
+          </div>
+        </div>
+      )}
+
+      {/* Hero */}
       <header className="page-header home-hero home-hero--streaming">
         <div className="home-hero-copy">
-          <h1 className="main-title text-gradient" data-text="FUNKNIME">FUNKNIME</h1>
-          <p className="subtitle">
-            Streaming anime & donghua sub Indo dengan katalog gabungan Otakudesu & Samehadaku.
-          </p>
+          <h1 className="main-title text-gradient" data-text="MRFUNK">MRFUNK</h1>
+          <p className="subtitle">Streaming anime & donghua sub Indo — katalog gabungan Otakudesu & Samehadaku.</p>
           <div className="home-hero-actions">
-            <Link to="/search" className="btn btn-primary">Mulai cari anime</Link>
-            <Link to="/ongoing" className="btn btn-secondary">Lihat yang sedang tayang</Link>
+            <Link to="/search" className="btn btn-primary">🔍 Cari Anime</Link>
+            <Link to="/ongoing" className="btn btn-secondary">📺 Sedang Tayang</Link>
           </div>
         </div>
         {ongoing.length > 0 && (
@@ -223,47 +171,31 @@ const Home = () => {
         )}
       </header>
 
+      {/* Watch History */}
       {watchHistory.length > 0 && (
         <section className="section home-rail">
           <div className="section-header home-rail-header">
-            <h2 className="section-title">Lanjut tonton</h2>
+            <h2 className="section-title">🕐 Lanjut Tonton</h2>
             <Link to="/history" className="view-all">Lihat semua</Link>
           </div>
           <div className="home-rail-scroll">
             {watchHistory.slice(0, 12).map((item, idx) => (
               <div className="home-rail-card" key={`${item.animeId}-${item.episodeId}-${idx}`}>
-                <Link
-                  to={`/watch/${item.episodeId}`}
-                  state={{ provider: item.provider, backAnimeId: item.animeId }}
-                  className="anime-card card"
-                >
+                <Link to={`/watch/${item.episodeId}`} state={{ provider: item.provider, backAnimeId: item.animeId }} className="anime-card card">
                   <div className="card-image-wrapper">
-                    <span className="anime-card-badge anime-card-badge--ongoing">
-                      Lanjut
-                    </span>
-                    {item.poster && (
-                      <img
-                        src={item.poster}
-                        alt={item.animeTitle}
-                        className="poster"
-                      />
+                    <span className="anime-card-badge anime-card-badge--ongoing">Lanjut</span>
+                    {item.poster ? <img src={item.poster} alt={item.animeTitle} className="poster" /> : <div style={{ width: '100%', height: '100%', background: 'var(--color-surface-hover)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem' }}>🎬</div>}
+                    <div className="card-overlay"><span className="play-icon" aria-hidden>▶</span></div>
+                    {item.currentTime > 0 && item.duration > 0 && (
+                      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '3px', background: 'rgba(255,255,255,0.15)', zIndex: 3 }}>
+                        <div style={{ height: '100%', width: `${Math.min((item.currentTime / item.duration) * 100, 100)}%`, background: 'var(--color-primary)', borderRadius: '0 2px 2px 0' }} />
+                      </div>
                     )}
-                    <div className="card-overlay">
-                      <span className="play-icon" aria-hidden>▶</span>
-                    </div>
                   </div>
                   <div className="anime-info">
                     <h3>{item.animeTitle}</h3>
-                    <div className="meta">
-                      <span className="episode-count">
-                        {item.episodeTitle || `Episode ${item.episodeId}`}
-                      </span>
-                    </div>
-                    {item.currentTime > 0 && (
-                      <div style={{ fontSize: '0.6rem', color: 'var(--color-primary)', fontWeight: 600, marginTop: '2px' }}>
-                        ⏱️ {formatTime(item.currentTime)}
-                      </div>
-                    )}
+                    <div className="meta"><span className="episode-count">{item.episodeTitle || `Episode`}</span></div>
+                    {item.currentTime > 0 && <div style={{ fontSize: '0.6rem', color: 'var(--color-primary)', fontWeight: 600, marginTop: '2px' }}>⏱️ {formatTime(item.currentTime)}</div>}
                   </div>
                 </Link>
               </div>
@@ -272,91 +204,77 @@ const Home = () => {
         </section>
       )}
 
+      {/* Anime sections */}
       {ongoing.length > 0 && (
         <section className="section home-rail">
-          <div className="section-header home-rail-header">
-            <h2 className="section-title">Anime sedang tayang</h2>
-            <Link to="/ongoing" className="view-all">Lihat semua</Link>
-          </div>
-          <div className="home-rail-scroll">
-            {buildRailItems(ongoing, 'Ongoing')}
-          </div>
+          <div className="section-header home-rail-header"><h2 className="section-title">🔥 Anime Sedang Tayang</h2><Link to="/ongoing" className="view-all">Lihat semua</Link></div>
+          <div className="home-rail-scroll">{buildRailItems(ongoing, 'Ongoing')}</div>
         </section>
       )}
-
       {donghuaOngoing.length > 0 && (
         <section className="section home-rail">
-          <div className="section-header home-rail-header">
-            <h2 className="section-title">Donghua sedang tayang</h2>
-            <Link to="/donghua-ongoing" className="view-all">Lihat semua</Link>
-          </div>
-          <div className="home-rail-scroll">
-            {buildRailItems(donghuaOngoing, 'Ongoing', true)}
-          </div>
+          <div className="section-header home-rail-header"><h2 className="section-title">🐉 Donghua Sedang Tayang</h2><Link to="/donghua-ongoing" className="view-all">Lihat semua</Link></div>
+          <div className="home-rail-scroll">{buildRailItems(donghuaOngoing, 'Ongoing', true)}</div>
         </section>
       )}
-
       {completed.length > 0 && (
         <section className="section home-rail">
-          <div className="section-header home-rail-header">
-            <h2 className="section-title">Anime baru selesai</h2>
-            <Link to="/completed" className="view-all">Lihat semua</Link>
-          </div>
-          <div className="home-rail-scroll">
-            {buildRailItems(completed, 'Completed')}
-          </div>
+          <div className="section-header home-rail-header"><h2 className="section-title">✅ Anime Baru Selesai</h2><Link to="/completed" className="view-all">Lihat semua</Link></div>
+          <div className="home-rail-scroll">{buildRailItems(completed, 'Completed')}</div>
         </section>
       )}
-
       {donghuaCompleted.length > 0 && (
         <section className="section home-rail">
-          <div className="section-header home-rail-header">
-            <h2 className="section-title">Donghua baru selesai</h2>
-            <Link to="/donghua-completed" className="view-all">Lihat semua</Link>
-          </div>
-          <div className="home-rail-scroll">
-            {buildRailItems(donghuaCompleted, 'Completed', true)}
+          <div className="section-header home-rail-header"><h2 className="section-title">🐉 Donghua Baru Selesai</h2><Link to="/donghua-completed" className="view-all">Lihat semua</Link></div>
+          <div className="home-rail-scroll">{buildRailItems(donghuaCompleted, 'Completed', true)}</div>
+        </section>
+      )}
+
+      {/* Schedule Summary */}
+      {days.length > 0 && (
+        <section className="section">
+          <div className="section-header"><h2 className="section-title">📅 Jadwal Tayang</h2><Link to="/schedule" className="view-all">Buka jadwal</Link></div>
+          <div className="schedule-summary">
+            <table>
+              <thead><tr><th>Hari</th><th>Total</th><th>Aksi</th></tr></thead>
+              <tbody>
+                {days.sort((a, b) => {
+                  const ai = DAY_ORDER.indexOf(a.day || '');
+                  const bi = DAY_ORDER.indexOf(b.day || '');
+                  return (ai < 0 ? 99 : ai) - (bi < 0 ? 99 : bi);
+                }).map((row) => {
+                  const count = (row.anime_list ?? row.animeList ?? []).length;
+                  return <tr key={row.day}><td>{row.day}</td><td>{count} anime</td><td><Link to="/schedule" className="schedule-buka">Buka</Link></td></tr>;
+                })}
+              </tbody>
+            </table>
           </div>
         </section>
       )}
 
-      {days.length > 0 && (
-        <section className="section section-neo home-schedule-preview">
-          <div className="section-header section-header-neo">
-            <h2 className="section-title section-title-neo">Ringkasan jadwal</h2>
-            <Link to="/schedule" className="view-all">Buka jadwal</Link>
+      {/* Top Donatur Leaderboard */}
+      {topDonors.length > 0 && (
+        <section className="section">
+          <div className="section-header">
+            <h2 className="section-title">💜 Top Donatur</h2>
+            <a href="https://trakteer.id/aldirahmanhh" target="_blank" rel="noopener noreferrer" className="view-all">Donasi juga →</a>
           </div>
-          <div className="schedule-summary">
-            <table>
-              <thead>
-                <tr>
-                  <th>Hari</th>
-                  <th>Total</th>
-                  <th>Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {days
-                  .sort((a, b) => {
-                    const ai = DAY_ORDER.indexOf(a.day || '');
-                    const bi = DAY_ORDER.indexOf(b.day || '');
-                    return (ai < 0 ? 99 : ai) - (bi < 0 ? 99 : bi);
-                  })
-                  .map((row) => {
-                    const list = row.anime_list ?? row.animeList ?? [];
-                    const count = list.length;
-                    return (
-                      <tr key={row.day}>
-                        <td>{row.day}</td>
-                        <td>{count} anime</td>
-                        <td>
-                          <Link to={`/schedule`} className="schedule-buka">Buka</Link>
-                        </td>
-                      </tr>
-                    );
-                  })}
-              </tbody>
-            </table>
+          <div style={{ background: 'var(--color-surface)', border: '2px solid var(--color-border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>
+            {topDonors.slice(0, 5).map((donor, idx) => (
+              <div key={donor.order_id || idx} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', borderBottom: idx < 4 ? '1px solid var(--color-border)' : 'none' }}>
+                <span style={{ fontSize: '1.2rem', fontWeight: 800, color: idx === 0 ? '#FFD700' : idx === 1 ? '#C0C0C0' : idx === 2 ? '#CD7F32' : 'var(--color-text-muted)', minWidth: '28px' }}>
+                  {idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : `#${idx + 1}`}
+                </span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)' }}>{donor.creator_name || 'Anonim'}</div>
+                  {donor.support_message && <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{donor.support_message}</div>}
+                </div>
+                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                  <div style={{ fontWeight: 700, fontSize: 'var(--text-sm)', color: 'var(--color-primary)' }}>{donor.quantity}x {donor.unit_name}</div>
+                  <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-dim)' }}>Rp {(donor.amount || 0).toLocaleString('id-ID')}</div>
+                </div>
+              </div>
+            ))}
           </div>
         </section>
       )}
