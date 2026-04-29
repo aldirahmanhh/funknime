@@ -77,12 +77,9 @@ const Home = () => {
       })
       .catch((err) => console.log('Trakteer fetch failed:', err));
 
-    // Show donate popup after 30s for first-time visitors
-    const shown = sessionStorage.getItem('donate_popup_shown');
-    if (!shown) {
-      const timer = setTimeout(() => { setShowDonatePopup(true); sessionStorage.setItem('donate_popup_shown', '1'); }, 30000);
-      return () => clearTimeout(timer);
-    }
+    // Show donate popup on every visit (delay 2s for smooth UX)
+    const timer = setTimeout(() => setShowDonatePopup(true), 2000);
+    return () => clearTimeout(timer);
   }, []);
 
   if (loading) {
@@ -139,17 +136,25 @@ const Home = () => {
       {/* Donate Popup */}
       {showDonatePopup && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '16px', backdropFilter: 'blur(4px)' }} onClick={() => setShowDonatePopup(false)}>
-          <div style={{ background: 'var(--color-surface)', border: '2px solid var(--color-border)', borderRadius: '16px', padding: '32px', maxWidth: '420px', width: '100%', textAlign: 'center', position: 'relative' }} onClick={e => e.stopPropagation()}>
-            <button onClick={() => setShowDonatePopup(false)} style={{ position: 'absolute', top: '12px', right: '16px', background: 'none', border: 'none', color: 'var(--color-text-muted)', fontSize: '1.2rem', cursor: 'pointer' }}>✕</button>
-            <div style={{ fontSize: '3rem', marginBottom: '12px' }}>☕</div>
-            <h2 style={{ fontSize: 'var(--text-xl)', marginBottom: '8px' }}>Dukung MrFunk!</h2>
-            <p style={{ color: 'var(--color-text-muted)', fontSize: 'var(--text-sm)', marginBottom: '20px', lineHeight: 1.6 }}>
-              Bantu kami tetap online & berkembang dengan donasi melalui Trakteer. Setiap dukungan sangat berarti! 💜
+          <div style={{ background: 'var(--color-surface)', border: '2px solid var(--color-primary)', borderRadius: '20px', padding: '32px 28px', maxWidth: '440px', width: '100%', textAlign: 'center', position: 'relative', boxShadow: '0 0 40px rgba(147,51,234,0.3)' }} onClick={e => e.stopPropagation()}>
+            <button onClick={() => setShowDonatePopup(false)} style={{ position: 'absolute', top: '12px', right: '16px', background: 'none', border: 'none', color: 'var(--color-text-muted)', fontSize: '1.3rem', cursor: 'pointer' }}>✕</button>
+            <div style={{ fontSize: '3.5rem', marginBottom: '8px' }}>💜</div>
+            <h2 style={{ fontSize: 'var(--text-xl)', fontWeight: 900, marginBottom: '6px' }}>Bantu MrFunk Tetap Online!</h2>
+            <p style={{ color: 'var(--color-text-muted)', fontSize: 'var(--text-sm)', marginBottom: '16px', lineHeight: 1.7 }}>
+              MrFunk butuh biaya server & domain agar tetap bisa diakses gratis oleh semua orang. Donasi kamu sekecil apapun sangat membantu kami tetap berjalan! 🙏
             </p>
-            <a href="https://trakteer.id/aldirahmanhh" target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginBottom: '8px' }}>
-              ☕ Trakteer Sekarang
+            <div style={{ background: 'var(--color-bg-alt)', borderRadius: '12px', padding: '14px', marginBottom: '18px', border: '1px solid var(--color-border)' }}>
+              <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-dim)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700 }}>Biaya Bulanan</div>
+              <div style={{ display: 'flex', justifyContent: 'space-around', gap: '8px' }}>
+                <div><div style={{ fontSize: 'var(--text-lg)', fontWeight: 800, color: 'var(--color-primary)' }}>🖥️</div><div style={{ fontSize: '0.65rem', color: 'var(--color-text-muted)', marginTop: '2px' }}>Server</div></div>
+                <div><div style={{ fontSize: 'var(--text-lg)', fontWeight: 800, color: 'var(--color-secondary)' }}>🌐</div><div style={{ fontSize: '0.65rem', color: 'var(--color-text-muted)', marginTop: '2px' }}>Domain</div></div>
+                <div><div style={{ fontSize: 'var(--text-lg)', fontWeight: 800, color: 'var(--color-accent)' }}>⚡</div><div style={{ fontSize: '0.65rem', color: 'var(--color-text-muted)', marginTop: '2px' }}>CDN & API</div></div>
+              </div>
+            </div>
+            <a href="https://trakteer.id/aldirahmanhh" target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginBottom: '10px', padding: '14px', fontSize: 'var(--text-base)', borderRadius: '12px' }}>
+              ☕ Donasi via Trakteer
             </a>
-            <button onClick={() => setShowDonatePopup(false)} style={{ background: 'none', border: 'none', color: 'var(--color-text-dim)', fontSize: 'var(--text-xs)', cursor: 'pointer', marginTop: '8px' }}>Nanti saja</button>
+            <button onClick={() => setShowDonatePopup(false)} style={{ background: 'none', border: 'none', color: 'var(--color-text-dim)', fontSize: 'var(--text-xs)', cursor: 'pointer', marginTop: '4px', padding: '8px' }}>Nanti saja, lanjut nonton →</button>
           </div>
         </div>
       )}

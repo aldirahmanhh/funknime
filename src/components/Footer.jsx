@@ -3,82 +3,88 @@ import { Link } from 'react-router-dom';
 import './Footer.css';
 
 const Footer = () => {
-  const [showReportModal, setShowReportModal] = useState(false);
+  const [showReport, setShowReport] = useState(false);
   const [reportText, setReportText] = useState('');
-  const currentYear = new Date().getFullYear();
-  const navLinks = [
-    { to: '/', label: 'Beranda' },
-    { to: '/ongoing', label: 'Ongoing' },
-    { to: '/completed', label: 'Completed' },
-    { to: '/genres', label: 'Genres' },
-    { to: '/az-list', label: 'A-Z' },
-    { to: '/schedule', label: 'Jadwal' },
-    { to: '/search', label: 'Cari' },
-  ];
+  const year = new Date().getFullYear();
 
-  const handleOpenReport = () => setShowReportModal(true);
-  const handleCloseReport = () => {
-    setShowReportModal(false);
-    setReportText('');
-  };
   const handleSendReport = () => {
-    const subject = encodeURIComponent('[MrFunk] Laporan Bug / Error');
-    const body = encodeURIComponent(
-      `Deskripsi error/bug:\n\n${reportText || '(Jelaskan masalah yang kamu temukan)'}\n\n---\nHalaman: ${typeof window !== 'undefined' ? window.location.href : ''}`
-    );
+    const subject = encodeURIComponent('[MrFunk] Laporan Bug');
+    const body = encodeURIComponent(`Bug:\n\n${reportText || '(Jelaskan masalah)'}\n\n---\nURL: ${window.location.href}`);
     window.location.href = `mailto:?subject=${subject}&body=${body}`;
-    handleCloseReport();
+    setShowReport(false);
+    setReportText('');
   };
 
   return (
     <>
       <footer className="footer">
+        <div className="footer-glow" />
         <div className="footer-inner">
-          <div className="footer-brand">
-            <Link to="/" className="footer-logo">
-              <span className="footer-emoji" aria-hidden>🔥</span>
-              <span className="footer-text">MrFunk</span>
+          {/* Brand */}
+          <div className="footer-brand-section">
+            <Link to="/" className="footer-brand-link">
+              <img src="/logo.png" alt="MrFunk" className="footer-logo-img" />
+              <span className="footer-brand-name">MrFunk</span>
             </Link>
-            <p className="footer-tagline">Streaming anime sub Indonesia. Nonton anime terbaru online.</p>
+            <p className="footer-tagline">
+              Streaming anime & donghua sub Indo terlengkap. Gratis, tanpa iklan berlebihan.
+            </p>
+            <a href="https://trakteer.id/aldirahmanhh" target="_blank" rel="noopener noreferrer" className="footer-donate-btn">
+              ☕ Dukung Kami
+            </a>
           </div>
-          <nav className="footer-nav" aria-label="Footer navigation">
-            <ul className="footer-links">
-              {navLinks.map(({ to, label }) => (
-                <li key={to}>
-                  <Link to={to} className="footer-link">{label}</Link>
-                </li>
-              ))}
-              <li>
-                <button type="button" className="footer-link footer-link-btn" onClick={handleOpenReport}>
-                  Lapor Bug
-                </button>
-              </li>
-            </ul>
-          </nav>
+
+          {/* Links */}
+          <div className="footer-links-section">
+            <div className="footer-col">
+              <h4 className="footer-col-title">Jelajahi</h4>
+              <Link to="/ongoing" className="footer-link">Anime Ongoing</Link>
+              <Link to="/completed" className="footer-link">Anime Completed</Link>
+              <Link to="/donghua-ongoing" className="footer-link">Donghua</Link>
+              <Link to="/schedule" className="footer-link">Jadwal Tayang</Link>
+            </div>
+            <div className="footer-col">
+              <h4 className="footer-col-title">Lainnya</h4>
+              <Link to="/genres" className="footer-link">Genre</Link>
+              <Link to="/az-list" className="footer-link">A-Z List</Link>
+              <Link to="/search" className="footer-link">Pencarian</Link>
+              <Link to="/history" className="footer-link">Riwayat</Link>
+            </div>
+            <div className="footer-col">
+              <h4 className="footer-col-title">Bantuan</h4>
+              <button type="button" className="footer-link footer-link-btn" onClick={() => setShowReport(true)}>Lapor Bug</button>
+              <a href="https://trakteer.id/aldirahmanhh" target="_blank" rel="noopener noreferrer" className="footer-link">Donasi</a>
+              <a href="https://github.com/aldirahmanhh/Funknime" target="_blank" rel="noopener noreferrer" className="footer-link">GitHub</a>
+            </div>
+          </div>
+
+          {/* Bottom */}
           <div className="footer-bottom">
-            <p className="footer-copy">© {currentYear} MrFunk. Semua hak dilindungi.</p>
+            <p className="footer-copy">© {year} MrFunk. Dibuat dengan 💜 oleh <a href="https://github.com/aldirahmanhh" target="_blank" rel="noopener noreferrer">aldirahmanhh</a></p>
+            <p className="footer-api-credit">API powered by <a href="https://www.sankavollerei.com" target="_blank" rel="noopener noreferrer">Sankavollerei</a></p>
+            <p className="footer-disclaimer">Disclaimer: MrFunk tidak menyimpan file video apapun di server kami. Semua konten disediakan oleh pihak ketiga.</p>
           </div>
         </div>
       </footer>
 
-      {showReportModal && (
-        <div className="report-modal-overlay" role="dialog" aria-modal="true" aria-labelledby="report-modal-title">
-          <div className="report-modal">
-            <h2 id="report-modal-title" className="report-modal-title">Lapor Error / Bug</h2>
-            <p className="report-modal-desc">Jelaskan error atau bug yang kamu temukan. Laporan akan dikirim via email.</p>
+      {/* Report Modal */}
+      {showReport && (
+        <div className="report-modal-overlay" onClick={() => setShowReport(false)}>
+          <div className="report-modal" onClick={e => e.stopPropagation()}>
+            <button className="report-modal-close" onClick={() => setShowReport(false)}>✕</button>
+            <h2 className="report-modal-title">🐛 Lapor Bug</h2>
+            <p style={{ color: 'var(--color-text-muted)', fontSize: 'var(--text-sm)', marginBottom: '12px' }}>Jelaskan error yang kamu temukan.</p>
             <textarea
               className="report-modal-textarea"
               value={reportText}
               onChange={(e) => setReportText(e.target.value)}
-              placeholder="Contoh: Tombol Download Batch tidak berfungsi di halaman detail anime..."
+              placeholder="Contoh: Video tidak bisa diputar di halaman..."
               rows={4}
-              aria-label="Deskripsi bug"
             />
             <div className="report-modal-actions">
-              <button type="button" className="btn btn-secondary" onClick={handleCloseReport}>Batal</button>
-              <button type="button" className="btn btn-primary" onClick={handleSendReport}>Buka Email</button>
+              <button type="button" className="btn btn-secondary" onClick={() => setShowReport(false)}>Batal</button>
+              <button type="button" className="btn btn-primary" onClick={handleSendReport}>📧 Kirim via Email</button>
             </div>
-            <button type="button" className="report-modal-close" onClick={handleCloseReport} aria-label="Tutup">✕</button>
           </div>
         </div>
       )}
