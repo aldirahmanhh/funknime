@@ -192,15 +192,31 @@ const Watch = () => {
     if (servers?.length > 0) handleServerSelect(servers.find(s => s.title?.toLowerCase().includes('ondesu')) || servers[0]);
   };
 
-  const isDirectVideo = (url) => url && /\.(mp4|webm|ogg|m3u8|mov)(\?|$)/i.test(url);
+  // Known iframe-only domains (embed players that can't be played via Video.js)
+  const IFRAME_DOMAINS = ['desustream', 'ondesu', 'odvidhide', 'youtu', 'youtube', 'drive.google', 'dailymotion', 'streamtape', 'mp4upload', 'filemoon'];
+
+  const isIframeOnly = (url) => {
+    if (!url) return false;
+    const lower = url.toLowerCase();
+    return IFRAME_DOMAINS.some(d => lower.includes(d)) || lower.includes('/embed/');
+  };
 
   const getEmbedUrl = (url) => {
     if (!url) return '';
-    if (isDirectVideo(url)) return null;
-    if (url.includes('desustream') || url.includes('ondesu') || url.includes('/embed/') || url.includes('player') || url.includes('odvidhide')) return url;
-    if (url.includes('youtube.com') || url.includes('youtu.be')) { const v = url.split('v=')[1]?.split('&')[0] || url.split('/').pop(); return `https://www.youtube.com/embed/${v}`; }
-    if (url.includes('drive.google.com')) { const f = url.split('/d/')[1]?.split('/')[0]; return `https://drive.google.com/file/d/${f}/preview`; }
-    return url;
+    // If it's a known iframe embed domain → use iframe
+    if (isIframeOnly(url)) {
+      if (url.includes('youtube.com') || url.includes('youtu.be')) {
+        const v = url.split('v=')[1]?.split('&')[0] || url.split('/').pop();
+        return `https://www.youtube.com/embed/${v}`;
+      }
+      if (url.includes('drive.google.com')) {
+        const f = url.split('/d/')[1]?.split('/')[0];
+        return `https://drive.google.com/file/d/${f}/preview`;
+      }
+      return url; // iframe as-is
+    }
+    // Everything else → try Video.js (direct play)
+    return null;
   };
 
   // ─── Render ───
