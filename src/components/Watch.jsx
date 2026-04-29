@@ -419,7 +419,6 @@ const Watch = () => {
               Ke Beranda
             </Link>
           </>
-          )}
         </div>
       </div>
     );

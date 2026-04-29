@@ -96,41 +96,31 @@ const Header = () => {
           })}
         </div>
 
-        <div className="nav-actions">
-          <Link to="/search" className="btn btn-primary search-button" onClick={closeMobileMenu}>
-            Cari
+        <div className="nav-actions" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <Link to="/search" className="nav-search-link" onClick={closeMobileMenu} aria-label="Cari">
+            🔍
           </Link>
           
           <button
             type="button"
-            className="nav-mobile-menu"
+            className={`mobile-menu-btn ${mobileMenuOpen ? 'open' : ''}`}
             onClick={toggleMobileMenu}
             aria-expanded={mobileMenuOpen}
             aria-label={mobileMenuOpen ? 'Tutup menu' : 'Buka menu'}
           >
-            <span className="hamburger" aria-hidden>
-              {mobileMenuOpen ? '✕' : '☰'}
-            </span>
+            <span className="hamburger-line" />
+            <span className="hamburger-line" />
+            <span className="hamburger-line" />
           </button>
         </div>
       </nav>
 
-      {mobileMenuOpen && (
-        <button
-          type="button"
-          className="nav-overlay"
-          onClick={closeMobileMenu}
-          aria-label="Tutup menu"
-        />
-      )}
+      <div 
+        className={`mobile-overlay ${mobileMenuOpen ? 'open' : ''}`}
+        onClick={closeMobileMenu}
+        aria-hidden="true"
+      />
     </header>
-
-    {/* Tombol search floating khusus mobile */}
-    {!mobileMenuOpen && !location.pathname.startsWith('/search') && (
-      <Link to="/search" className="mobile-search-fab" aria-label="Cari anime (mobile)">
-        🔍
-      </Link>
-    )}
     </>
   );
 };
