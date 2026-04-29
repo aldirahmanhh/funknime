@@ -40,7 +40,7 @@ const Header = () => {
         <nav className="nav-container" aria-label="Main navigation">
           <div className="nav-brand">
             <Link to="/" className="nav-logo" onClick={closeMobileMenu}>
-              <img src="/favicon.svg" alt="MrFunk" className="logo-image" />
+              <img src="/logo.png" alt="MrFunk" className="logo-image" />
               <span className="logo-text">MrFunk</span>
             </Link>
           </div>

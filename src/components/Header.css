@@ -26,7 +26,7 @@
   transition: transform var(--transition-fast);
 }
 .nav-logo:hover { transform: scale(1.03); }
-.logo-image { width: 28px; height: 28px; }
+.logo-image { width: 36px; height: 36px; border-radius: 8px; object-fit: cover; }
 .logo-text {
   font-family: var(--font-heading); font-size: var(--text-lg); font-weight: 900;
   text-transform: uppercase; letter-spacing: 0.04em;
