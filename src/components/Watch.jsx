@@ -1,9 +1,12 @@
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { animeAPI } from '../services/api';
 import { addToWatchHistory, updateWatchProgress, getWatchProgress } from '../utils/watchHistory';
-import videojs from 'video.js';
-import 'video.js/dist/video-js.css';
+import { createPlayer } from '@videojs/react';
+import { VideoSkin, Video, videoFeatures } from '@videojs/react/video';
+import '@videojs/react/video/skin.css';
+
+const Player = createPlayer({ features: videoFeatures });
 
 const Watch = () => {
   const { episodeId } = useParams();
@@ -16,32 +19,29 @@ const Watch = () => {
   const [selectedQuality, setSelectedQuality] = useState('480p');
   const [selectedServer, setSelectedServer] = useState(null);
   const [videoUrl, setVideoUrl] = useState('');
+  const videoElRef = useRef(null);
+  const saveTimerRef = useRef(null);
 
-  // Video.js refs
-  const videoContainerRef = useRef(null);
-  const playerRef = useRef(null);
-  const saveIntervalRef = useRef(null);
-
-  // ─── Save & Restore progress ───
+  // ─── Progress helpers ───
   const saveProgress = useCallback(() => {
     if (!episodeId) return;
-    const player = playerRef.current;
-    if (player && !player.isDisposed() && player.currentTime() > 5) {
-      updateWatchProgress(episodeId, player.currentTime(), player.duration());
+    const vid = videoElRef.current;
+    if (vid && vid.currentTime > 5) {
+      updateWatchProgress(episodeId, vid.currentTime, vid.duration);
     }
   }, [episodeId]);
 
-  // Save on page leave (works for both video & iframe)
+  // Save on leave
   useEffect(() => {
-    const onBeforeUnload = () => saveProgress();
-    window.addEventListener('beforeunload', onBeforeUnload);
+    const onUnload = () => saveProgress();
+    window.addEventListener('beforeunload', onUnload);
     return () => {
-      window.removeEventListener('beforeunload', onBeforeUnload);
-      saveProgress(); // also save on component unmount (navigate away)
+      window.removeEventListener('beforeunload', onUnload);
+      saveProgress();
     };
   }, [saveProgress]);
 
-  // ─── Fetch episode data ───
+  // ─── Fetch episode ───
   useEffect(() => {
     const fetchEpisodeData = async () => {
       try {
@@ -127,103 +127,43 @@ const Watch = () => {
     fetchEpisodeData();
   }, [episodeId, location.state?.provider]);
 
-  // ─── Video.js player init/update ───
-  const isDirectVideo = useCallback((url) => {
-    if (!url) return false;
-    return /\.(mp4|webm|ogg|m3u8|mov)(\?|$)/i.test(url);
-  }, []);
-
+  // ─── Video.js progress tracking via native ref ───
   useEffect(() => {
-    if (!videoUrl || !isDirectVideo(videoUrl)) {
-      // Dispose player if switching to iframe
-      if (playerRef.current && !playerRef.current.isDisposed()) {
-        saveProgress();
-        playerRef.current.dispose();
-        playerRef.current = null;
-      }
-      return;
-    }
-
-    // Create or update Video.js player
-    if (!videoContainerRef.current) return;
+    const vid = videoElRef.current;
+    if (!vid) return;
 
     const savedTime = getWatchProgress(episodeId);
 
-    if (playerRef.current && !playerRef.current.isDisposed()) {
-      // Update source
-      playerRef.current.src({ src: videoUrl, type: videoUrl.includes('.m3u8') ? 'application/x-mpegURL' : 'video/mp4' });
-      playerRef.current.ready(() => {
-        if (savedTime > 5) playerRef.current.currentTime(savedTime);
-      });
-    } else {
-      // Create new player
-      const videoEl = document.createElement('video-js');
-      videoEl.classList.add('vjs-big-play-centered', 'vjs-fluid');
-      videoContainerRef.current.innerHTML = '';
-      videoContainerRef.current.appendChild(videoEl);
-
-      const player = videojs(videoEl, {
-        controls: true,
-        autoplay: true,
-        preload: 'auto',
-        fluid: true,
-        responsive: true,
-        playbackRates: [0.5, 1, 1.25, 1.5, 2],
-        sources: [{ src: videoUrl, type: videoUrl.includes('.m3u8') ? 'application/x-mpegURL' : 'video/mp4' }],
-        controlBar: {
-          children: [
-            'playToggle', 'volumePanel', 'currentTimeDisplay',
-            'timeDivider', 'durationDisplay', 'progressControl',
-            'playbackRateMenuButton', 'fullscreenToggle',
-          ],
-        },
-      });
-
-      player.ready(() => {
-        if (savedTime > 5) player.currentTime(savedTime);
-      });
-
-      // Save progress every 5 seconds
-      player.on('timeupdate', () => {
-        if (!saveIntervalRef.current) {
-          saveIntervalRef.current = setInterval(() => {
-            if (player && !player.isDisposed() && player.currentTime() > 5) {
-              updateWatchProgress(episodeId, player.currentTime(), player.duration());
-            }
-          }, 5000);
-        }
-      });
-
-      player.on('pause', () => {
-        if (!player.isDisposed() && player.currentTime() > 5) {
-          updateWatchProgress(episodeId, player.currentTime(), player.duration());
-        }
-      });
-
-      player.on('ended', () => {
-        if (!player.isDisposed()) {
-          updateWatchProgress(episodeId, player.currentTime(), player.duration());
-        }
-      });
-
-      playerRef.current = player;
-    }
-
-    return () => {
-      if (saveIntervalRef.current) { clearInterval(saveIntervalRef.current); saveIntervalRef.current = null; }
+    const onLoaded = () => {
+      if (savedTime > 5) vid.currentTime = savedTime;
     };
-  }, [videoUrl, episodeId, isDirectVideo, saveProgress]);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (playerRef.current && !playerRef.current.isDisposed()) {
-        playerRef.current.dispose();
-        playerRef.current = null;
+    const onPause = () => {
+      if (vid.currentTime > 5) updateWatchProgress(episodeId, vid.currentTime, vid.duration);
+    };
+    const onPlay = () => {
+      if (!saveTimerRef.current) {
+        saveTimerRef.current = setInterval(() => {
+          if (vid.currentTime > 5) updateWatchProgress(episodeId, vid.currentTime, vid.duration);
+        }, 5000);
       }
-      if (saveIntervalRef.current) clearInterval(saveIntervalRef.current);
     };
-  }, []);
+    const onEnded = () => {
+      if (vid.currentTime > 5) updateWatchProgress(episodeId, vid.currentTime, vid.duration);
+    };
+
+    vid.addEventListener('loadeddata', onLoaded);
+    vid.addEventListener('pause', onPause);
+    vid.addEventListener('play', onPlay);
+    vid.addEventListener('ended', onEnded);
+
+    return () => {
+      vid.removeEventListener('loadeddata', onLoaded);
+      vid.removeEventListener('pause', onPause);
+      vid.removeEventListener('play', onPlay);
+      vid.removeEventListener('ended', onEnded);
+      if (saveTimerRef.current) { clearInterval(saveTimerRef.current); saveTimerRef.current = null; }
+    };
+  }, [videoUrl, episodeId]);
 
   // ─── Anti-ads ───
   useEffect(() => {
@@ -238,6 +178,7 @@ const Watch = () => {
 
   // ─── Handlers ───
   const handleServerSelect = (server) => {
+    saveProgress(); // save before switching
     if (server.href) {
       const sid = server.serverId || server.href.split('/').pop();
       animeAPI.getStreamingServer(sid).then(d => { if (d?.data?.url) setVideoUrl(d.data.url); }).catch(() => { if (episodeData?.defaultStreamingUrl) setVideoUrl(episodeData.defaultStreamingUrl); });
@@ -251,9 +192,11 @@ const Watch = () => {
     if (servers?.length > 0) handleServerSelect(servers.find(s => s.title?.toLowerCase().includes('ondesu')) || servers[0]);
   };
 
+  const isDirectVideo = (url) => url && /\.(mp4|webm|ogg|m3u8|mov)(\?|$)/i.test(url);
+
   const getEmbedUrl = (url) => {
     if (!url) return '';
-    if (isDirectVideo(url)) return null; // use Video.js
+    if (isDirectVideo(url)) return null;
     if (url.includes('desustream') || url.includes('ondesu') || url.includes('/embed/') || url.includes('player') || url.includes('odvidhide')) return url;
     if (url.includes('youtube.com') || url.includes('youtu.be')) { const v = url.split('v=')[1]?.split('&')[0] || url.split('/').pop(); return `https://www.youtube.com/embed/${v}`; }
     if (url.includes('drive.google.com')) { const f = url.split('/d/')[1]?.split('/')[0]; return `https://drive.google.com/file/d/${f}/preview`; }
@@ -298,10 +241,18 @@ const Watch = () => {
       <div className="video-player-wrapper">
         {videoUrl ? (
           embedUrl === null ? (
-            // Direct video → Video.js
-            <div ref={videoContainerRef} style={{ width: '100%', height: '100%' }} />
+            /* Direct video → @videojs/react */
+            <Player.Provider key={videoUrl}>
+              <VideoSkin>
+                <Video
+                  ref={videoElRef}
+                  src={videoUrl}
+                  playsInline
+                  autoPlay
+                />
+              </VideoSkin>
+            </Player.Provider>
           ) : embedUrl ? (
-            // Iframe embed
             <iframe src={embedUrl} sandbox="allow-scripts allow-same-origin allow-forms allow-presentation" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen title={episodeData.title} style={{ width: '100%', height: '100%', border: 'none' }} />
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>

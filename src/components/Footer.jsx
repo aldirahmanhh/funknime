@@ -54,14 +54,12 @@ const Footer = () => {
               <h4 className="footer-col-title">Bantuan</h4>
               <button type="button" className="footer-link footer-link-btn" onClick={() => setShowReport(true)}>Lapor Bug</button>
               <a href="https://trakteer.id/aldirahmanhh" target="_blank" rel="noopener noreferrer" className="footer-link">Donasi</a>
-              <a href="https://github.com/aldirahmanhh/Funknime" target="_blank" rel="noopener noreferrer" className="footer-link">GitHub</a>
             </div>
           </div>
 
           {/* Bottom */}
           <div className="footer-bottom">
-            <p className="footer-copy">© {year} MrFunk. Dibuat dengan 💜 oleh <a href="https://github.com/aldirahmanhh" target="_blank" rel="noopener noreferrer">aldirahmanhh</a></p>
-            <p className="footer-api-credit">API powered by <a href="https://www.sankavollerei.com" target="_blank" rel="noopener noreferrer">Sankavollerei</a></p>
+            <p className="footer-copy">© {year} MrFunk. All rights reserved.</p>
             <p className="footer-disclaimer">Disclaimer: MrFunk tidak menyimpan file video apapun di server kami. Semua konten disediakan oleh pihak ketiga.</p>
           </div>
         </div>
