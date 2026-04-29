@@ -26,7 +26,7 @@ const Genres = () => {
         if (cancelled) return;
 
         const normalizeList = (data, provider) => {
-          const raw = data?.data?.genreList ?? data?.genreList ?? (Array.isArray(data) ? data : []);
+          const raw = data?.genreList ?? (Array.isArray(data) ? data : []);
           if (!Array.isArray(raw)) return [];
           return raw.map((g) => ({
             ...g,
@@ -48,29 +48,22 @@ const Genres = () => {
           if (existing) {
             const providers = Array.from(new Set([...(existing.providers || []), ...(g.providers || [])]));
             map.set(key, {
-              ...existing,
-              ...g,
-              providers,
+              ...existing, ...g, providers,
               otakSlug: existing.otakSlug || (g.provider === 'otakudesu' ? g.genreId : null),
               sameId: existing.sameId || (g.provider === 'samehadaku' ? g.genreId : null),
             });
           } else {
             map.set(key, {
-              ...g,
-              providers: g.providers,
+              ...g, providers: g.providers,
               otakSlug: g.provider === 'otakudesu' ? g.genreId : null,
               sameId: g.provider === 'samehadaku' ? g.genreId : null,
             });
           }
         });
 
-        const merged = Array.from(map.values()).sort((a, b) => (a.title || '').localeCompare(b.title || ''));
-        setGenres(merged);
+        setGenres(Array.from(map.values()).sort((a, b) => (a.title || '').localeCompare(b.title || '')));
       } catch (err) {
-        if (cancelled) return;
-        const msg = (err?.message ?? (typeof err?.toString === 'function' ? err.toString() : String(err))) || 'Gagal memuat genre';
-        setError(String(msg));
-        console.error('Genres fetch error:', err);
+        if (!cancelled) setError(String(err?.message || err));
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -83,7 +76,6 @@ const Genres = () => {
     setSelectedGenre(genre);
     setGenreLoading(true);
     setAnimeByGenre([]);
-    
     try {
       const results = [];
       if (genre.otakSlug) {
@@ -101,118 +93,72 @@ const Genres = () => {
         } catch {}
       }
 
-      const normKey = (item) =>
-        (item.title || item.name || '').toString().toLowerCase().replace(/\s+/g, ' ').trim();
+      const normKey = (item) => (item.title || item.name || '').toString().toLowerCase().replace(/\s+/g, '').trim();
       const map = new Map();
       results.forEach((item) => {
         const key = normKey(item);
         const existing = map.get(key);
         if (existing) {
           const providers = Array.from(new Set([...(existing.providers || []), ...(item.providers || [])]));
-          map.set(key, {
-            ...existing,
-            ...item,
-            providers,
-            provider: providers.includes('otakudesu') ? 'otakudesu' : providers[0],
-          });
+          map.set(key, { ...existing, ...item, providers, provider: providers.includes('otakudesu') ? 'otakudesu' : providers[0] });
         } else {
           map.set(key, item);
         }
       });
-
       setAnimeByGenre(Array.from(map.values()));
-    } catch (err) {
-      console.error('Genre anime fetch error:', err);
+    } catch {
       setAnimeByGenre([]);
     } finally {
       setGenreLoading(false);
     }
   };
 
-  const GenreCard = ({ genre }) => {
-    const genreName = genre.title || genre.name || genre;
-    const hasOtak = genre.providers?.includes('otakudesu');
-    const hasSame = genre.providers?.includes('samehadaku');
-    
-    return (
-      <div 
-        className={`genre-card ${selectedGenre === genre ? 'active' : ''}`}
-        onClick={() => handleGenreClick(genre)}
-      >
-        <span className="genre-name">{genreName}</span>
-        <div className="genre-providers">
-          {hasOtak && <span className="az-provider-pill az-provider-pill--otakudesu">Otakudesu</span>}
-          {hasSame && <span className="az-provider-pill az-provider-pill--samehadaku">Samehadaku</span>}
-        </div>
-      </div>
-    );
-  };
-
-  if (error != null && error !== '' && !loading) {
+  if (error && !loading) {
     return (
       <div className="main-container">
-        <ErrorPage
-          title="Jelajahi Genre"
-          message={`Gagal memuat genre: ${error}`}
-          hint="Server mungkin sedang bermasalah (mis. error 500). Coba lagi nanti."
-          onRetry={() => window.location.reload()}
-        />
+        <ErrorPage title="Jelajahi Genre" message={`Gagal memuat genre: ${error}`} hint="Coba lagi nanti." onRetry={() => window.location.reload()} />
       </div>
     );
   }
 
   return (
     <div className="genres-page main-container">
-      <header className="page-header genres-header genres-hero section section-neo">
+      <header className="page-header">
         <h1 className="main-title text-gradient">Jelajahi Genre</h1>
         <p className="subtitle">Temukan anime berdasarkan genre favorit</p>
       </header>
 
       {loading ? (
-        <div className="genres-loading loading-container">
-          <div className="spinner" aria-hidden />
-          <p>Memuat genre...</p>
-        </div>
+        <div className="loading-container"><div className="spinner" /><p>Memuat genre...</p></div>
       ) : (
         <>
-          <section className="genre-section section section-neo">
-            <h2 className="genre-section-label section-title-neo">Pilih Genre</h2>
-            <div className="genre-grid">
-              {Array.isArray(genres) ? genres.map((genre, idx) => (
-                <GenreCard key={idx} genre={genre} />
-              )) : typeof genres === 'object' && (
-                <div className="genre-list">
-                  {Object.entries(genres).map(([key, value]) => (
-                    <GenreCard key={key} genre={{ id: key, title: value }} />
-                  ))}
-                </div>
-              )}
-            </div>
-          </section>
+          <div className="genres-grid">
+            {genres.map((genre, idx) => (
+              <button
+                key={idx}
+                type="button"
+                className={`genre-card ${selectedGenre === genre ? 'active' : ''}`}
+                onClick={() => handleGenreClick(genre)}
+                style={selectedGenre === genre ? { borderColor: 'var(--color-primary)', background: 'rgba(255,62,154,0.08)' } : {}}
+              >
+                <span>{genre.title || genre.name}</span>
+              </button>
+            ))}
+          </div>
 
           {selectedGenre && (
-            <section className="genre-anime-section section section-neo">
-              <div className="section-header section-header-neo">
-                <h2 className="section-title section-title-neo">{selectedGenre.title || selectedGenre.name || selectedGenre}</h2>
-                <button
-                  type="button"
-                  className="clear-genre-btn btn btn-secondary"
-                  onClick={() => {
-                    setSelectedGenre(null);
-                    setAnimeByGenre([]);
-                  }}
-                >
-                  Hapus Pilihan
+            <section style={{ marginTop: 'var(--space-8)' }}>
+              <div className="section-header">
+                <h2 className="section-title">{selectedGenre.title}</h2>
+                <button type="button" className="btn btn-secondary" onClick={() => { setSelectedGenre(null); setAnimeByGenre([]); }} style={{ fontSize: 'var(--text-xs)', padding: '6px 12px' }}>
+                  ✕ Hapus
                 </button>
               </div>
 
               {genreLoading ? (
-                <div className="loading-more">
-                  <div className="spinner" aria-hidden />
-                  <p>Memuat anime...</p>
-                </div>
+                <div className="loading-container"><div className="spinner" /><p>Memuat anime...</p></div>
               ) : animeByGenre.length === 0 ? (
-                <p className="no-data">Tidak ada anime di genre ini.</p>
+                <p style={{ textAlign: 'center', color: 'var(--color-text-muted)', padding: '40px 0' }}>Tidak ada anime di genre ini.</p>
               ) : (
                 <div className="anime-grid">
                   {animeByGenre.map((anime, idx) => (

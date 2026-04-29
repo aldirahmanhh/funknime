@@ -5,7 +5,7 @@ import { SkeletonAnimeGrid } from './Skeleton';
 import AnimeCard from './AnimeCard';
 import AnimeCarousel from './AnimeCarousel';
 import Footer from './Footer';
-import { getWatchHistory } from '../utils/watchHistory';
+import { getWatchHistory, formatTime } from '../utils/watchHistory';
 
 const DAY_ORDER = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 
@@ -218,7 +218,7 @@ const Home = () => {
         </div>
         {ongoing.length > 0 && (
           <div className="home-hero-featured">
-            <AnimeCarousel items={ongoing.slice(0, 8)} maxItems={5} />
+            <AnimeCarousel items={ongoing.slice(0, 8)} maxItems={8} />
           </div>
         )}
       </header>
@@ -259,6 +259,11 @@ const Home = () => {
                         {item.episodeTitle || `Episode ${item.episodeId}`}
                       </span>
                     </div>
+                    {item.currentTime > 0 && (
+                      <div style={{ fontSize: '0.6rem', color: 'var(--color-primary)', fontWeight: 600, marginTop: '2px' }}>
+                        ⏱️ {formatTime(item.currentTime)}
+                      </div>
+                    )}
                   </div>
                 </Link>
               </div>
