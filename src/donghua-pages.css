@@ -253,40 +253,6 @@
   text-decoration: underline;
 }
 
-/* Dracin specific styles */
-.dracin-card .episode-badge {
-  position: absolute;
-  bottom: 8px;
-  left: 8px;
-  right: 8px;
-  background: rgba(155, 89, 182, 0.95);
-  color: white;
-  padding: 6px 10px;
-  border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-align: center;
-  border: 2px solid var(--color-border);
-  box-shadow: var(--shadow-sm);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.dracin-card .anime-poster {
-  position: relative;
-  padding-bottom: 140%;
-}
-
-.dracin-card .anime-poster img {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
 /* Maintenance Page */
 .maintenance-container {
   display: flex;

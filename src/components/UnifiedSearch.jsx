@@ -8,10 +8,9 @@ const UnifiedSearch = () => {
   const [query, setQuery] = useState(searchParams.get('q') || '');
   const [animeResults, setAnimeResults] = useState([]);
   const [donghuaResults, setDonghuaResults] = useState([]);
-  const [dracinResults, setDracinResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('all'); // all, anime, donghua, dracin
+  const [activeTab, setActiveTab] = useState('all'); // all, anime, donghua
 
   useEffect(() => {
     const q = searchParams.get('q');
@@ -28,20 +27,17 @@ const UnifiedSearch = () => {
       setLoading(true);
       setError(null);
       
-      // Search anime, donghua, and dracin in parallel
-      const [animeRes, donghuaRes, dracinRes] = await Promise.all([
+      // Search anime and donghua in parallel
+      const [animeRes, donghuaRes] = await Promise.all([
         animeAPI.search(searchQuery).catch(() => ({ data: { animeList: [] } })),
         animeAPI.searchDonghua(searchQuery).catch(() => ({ data: [] })),
-        animeAPI.searchDracin(searchQuery).catch(() => ({ data: [] })),
       ]);
 
       const animeList = animeRes?.data?.animeList || [];
       const donghuaList = Array.isArray(donghuaRes?.data) ? donghuaRes.data : [];
-      const dracinList = Array.isArray(dracinRes?.data) ? dracinRes.data : [];
       
       setAnimeResults(animeList);
       setDonghuaResults(donghuaList);
-      setDracinResults(dracinList);
     } catch (err) {
       setError(err?.message ?? 'Gagal mencari');
     } finally {
@@ -59,24 +55,22 @@ const UnifiedSearch = () => {
   const getFilteredResults = () => {
     switch (activeTab) {
       case 'anime':
-        return { anime: animeResults, donghua: [], dracin: [] };
+        return { anime: animeResults, donghua: [] };
       case 'donghua':
-        return { anime: [], donghua: donghuaResults, dracin: [] };
-      case 'dracin':
-        return { anime: [], donghua: [], dracin: dracinResults };
+        return { anime: [], donghua: donghuaResults };
       default:
-        return { anime: animeResults, donghua: donghuaResults, dracin: dracinResults };
+        return { anime: animeResults, donghua: donghuaResults };
     }
   };
 
-  const { anime, donghua, dracin } = getFilteredResults();
-  const totalResults = animeResults.length + donghuaResults.length + dracinResults.length;
+  const { anime, donghua } = getFilteredResults();
+  const totalResults = animeResults.length + donghuaResults.length;
 
   return (
     <div className="main-container">
       <header className="page-header">
         <h1 className="main-title">Search</h1>
-        <p className="subtitle">Cari anime, donghua, atau dracin</p>
+        <p className="subtitle">Cari anime atau donghua</p>
       </header>
 
       <form onSubmit={handleSubmit} className="search-form">
@@ -84,7 +78,7 @@ const UnifiedSearch = () => {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Cari anime, donghua, atau dracin..."
+          placeholder="Cari anime atau donghua..."
           className="search-input"
         />
         <button type="submit" className="btn btn-primary">
@@ -111,12 +105,6 @@ const UnifiedSearch = () => {
             onClick={() => setActiveTab('donghua')}
           >
             Donghua ({donghuaResults.length})
-          </button>
-          <button
-            className={`filter-tab ${activeTab === 'dracin' ? 'active' : ''}`}
-            onClick={() => setActiveTab('dracin')}
-          >
-            Dracin ({dracinResults.length})
           </button>
         </div>
       )}
@@ -170,31 +158,7 @@ const UnifiedSearch = () => {
             </section>
           )}
 
-          {dracin.length > 0 && (
-            <section className="section">
-              <h2 className="section-title">Dracin ({dracin.length})</h2>
-              <div className="anime-grid">
-                {dracin.map((item, idx) => (
-                  <AnimeCard
-                    key={item.slug || idx}
-                    anime={{
-                      ...item,
-                      animeId: item.slug,
-                      title: item.title,
-                      poster: item.poster,
-                      status: item.status,
-                      type: item.type,
-                      provider: 'dracin',
-                    }}
-                    index={idx}
-                    providerHint="Dracin"
-                  />
-                ))}
-              </div>
-            </section>
-          )}
-
-          {anime.length === 0 && donghua.length === 0 && dracin.length === 0 && (
+          {anime.length === 0 && donghua.length === 0 && (
             <div className="empty-state">
               <p>Tidak ada hasil untuk "{query}"</p>
               <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginTop: '16px' }}>

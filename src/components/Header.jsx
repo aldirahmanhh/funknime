@@ -42,13 +42,6 @@ const Header = () => {
         { to: '/donghua-az', label: 'A-Z List' },
       ]
     },
-    { 
-      label: 'Dracin',
-      submenu: [
-        { to: '/dracin-latest', label: 'Latest' },
-        { to: '/dracin-popular', label: 'Popular' },
-      ]
-    },
     { to: '/genres', label: 'Genres' },
     { to: '/schedule', label: 'Schedule' },
     { to: '/history', label: 'History' },

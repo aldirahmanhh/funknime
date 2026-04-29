@@ -24,25 +24,22 @@ const Watch = () => {
         
         // Build provider list based on navigation context
         const stateProvider = location.state?.provider;
-        const dracinIndex = location.state?.episodeIndex || 1;
         
         const allProviders = [
-          { fn: () => animeAPI.getDracinEpisode(episodeId, dracinIndex), name: 'dracin' },
           { fn: () => animeAPI.getDonghuaEpisode(episodeId), name: 'donghua' },
           { fn: () => animeAPI.getEpisodeDetail(episodeId), name: 'otakudesu' },
           { fn: () => animeAPI.getEpisodeDetailSamehadaku(episodeId), name: 'samehadaku' },
           { fn: () => animeAPI.getEpisodeDetailStream(episodeId), name: 'stream' },
         ];
         
-        // If provider is known, try it first then fallback to others (skip dracin for non-dracin)
+        // If provider is known, try it first then fallback to others
         let providers;
         if (stateProvider) {
           const primary = allProviders.find(p => p.name === stateProvider);
-          const rest = allProviders.filter(p => p.name !== stateProvider && p.name !== 'dracin');
+          const rest = allProviders.filter(p => p.name !== stateProvider);
           providers = primary ? [primary, ...rest] : rest;
         } else {
-          // No provider hint - skip dracin (its API is unreliable), try others
-          providers = allProviders.filter(p => p.name !== 'dracin');
+          providers = allProviders;
         }
         
         let data = null;
@@ -55,10 +52,7 @@ const Watch = () => {
             const result = await p.fn();
             
             // Check if result has valid data
-            // DramaBox has data.episode.videoPath, Donghua has streaming.servers, anime has defaultStreamingUrl/servers/server
-            const hasValidData = result?.data?.episode?.videoPath ||
-                                result?.data?.episode?.stream ||
-                                result?.streaming?.servers || 
+            const hasValidData = result?.streaming?.servers || 
                                 result?.data?.defaultStreamingUrl || 
                                 result?.data?.servers || 
                                 result?.data?.server;
@@ -80,10 +74,6 @@ const Watch = () => {
         }
         
         if (!data) {
-          // Dracin-specific: API endpoint is down, give a clearer message
-          if (stateProvider === 'dracin') {
-            throw new Error('DRACIN_UNAVAILABLE');
-          }
           throw new Error(lastError?.message || 'Episode tidak ditemukan di semua provider. Mungkin episode ini belum tersedia atau sudah dihapus.');
         }
         
@@ -130,50 +120,7 @@ const Watch = () => {
           return;
         }
 
-        // Handle DramaBox response structure (direct MP4 URLs)
-        if (usedProvider === 'dracin' && data?.data) {
-          const ep = data.data.episode || {};
-          const videoPath = ep.videoPath || ep.stream || '';
-          const dramaTitle = location.state?.dramaTitle || `Drama #${episodeId}`;
-          
-          const dracinData = {
-            title: ep.name || `Episode ${ep.index || dracinIndex}`,
-            episode: ep.name || `Episode ${ep.index || dracinIndex}`,
-            defaultStreamingUrl: videoPath,
-            isDramaBox: true,
-            server: {
-              qualities: [{
-                title: 'DramaBox',
-                serverList: videoPath ? [{ title: 'DramaBox MP4', url: videoPath, serverId: 'dramabox-mp4' }] : [],
-              }],
-            },
-            hasNextEpisode: !!data.data.nextEpisode,
-            hasPrevEpisode: !!data.data.prevEpisode,
-            nextEpisode: data.data.nextEpisode ? { episodeId, episodeIndex: data.data.nextEpisode.index } : null,
-            prevEpisode: data.data.prevEpisode ? { episodeId, episodeIndex: data.data.prevEpisode.index } : null,
-            dramaTitle,
-          };
-          
-          setEpisodeData(dracinData);
-          setVideoUrl(videoPath);
-          setSelectedQuality('DramaBox');
-          setSelectedServer(dracinData.server.qualities[0]?.serverList[0] || null);
-          
-          // Save to watch history
-          addToWatchHistory({
-            animeId: episodeId,
-            episodeId: `${episodeId}-ep${ep.index || dracinIndex}`,
-            animeTitle: dramaTitle,
-            episodeTitle: ep.name || `Episode ${ep.index || dracinIndex}`,
-            poster: '',
-            provider: 'dracin',
-          });
-          
-          setLoading(false);
-          return;
-        }
-        
-        // Handle anime response structure (existing code)
+        // Handle anime response structure
         const raw = data?.data || null;
 
         // Normalize common shapes from different providers
@@ -422,11 +369,6 @@ const Watch = () => {
       return null; // Signal to use <video> element
     }
 
-    // CloudFront signed URLs (DramaBox MP4s)
-    if (url.includes('cloudfront.net') || url.includes('dramabox')) {
-      return null; // Signal to use <video> element
-    }
-
     // Unknown URL - return as-is (could be a direct link)
     return url;
   };
@@ -441,63 +383,42 @@ const Watch = () => {
   }
 
   if (error || !episodeData) {
-    const isDracinUnavailable = error === 'DRACIN_UNAVAILABLE';
-    const isNotFound = isDracinUnavailable || error?.includes('tidak ditemukan') || error?.includes('404');
+    const isNotFound = error?.includes('tidak ditemukan') || error?.includes('404');
     
     return (
       <div className="error-container main-container">
         <div className="error-icon" aria-hidden="true">
-          {isDracinUnavailable ? '📺' : isNotFound ? '🔍' : '⚠️'}
+          {isNotFound ? '🔍' : '⚠️'}
         </div>
-        <h2>{isDracinUnavailable ? 'Episode Belum Tersedia' : isNotFound ? 'Episode Tidak Ditemukan' : 'Terjadi Kesalahan'}</h2>
+        <h2>{isNotFound ? 'Episode Tidak Ditemukan' : 'Terjadi Kesalahan'}</h2>
         <p className="error-message">
-          {isDracinUnavailable 
-            ? 'Episode drama ini sedang tidak tersedia untuk ditonton saat ini.'
-            : error || 'Episode tidak ditemukan'}
+          {error || 'Episode tidak ditemukan'}
         </p>
-        {isDracinUnavailable ? (
-          <p className="error-hint">
-            Server streaming untuk drama sedang dalam perbaikan. Silakan coba lagi nanti atau kembali ke halaman detail drama.
-          </p>
-        ) : isNotFound ? (
+        {isNotFound ? (
           <p className="error-hint">
             Episode ini mungkin belum tersedia, sudah dihapus, atau URL-nya salah.
             Coba cek daftar episode di halaman anime.
           </p>
         ) : null}
         <div className="error-actions">
-          {isDracinUnavailable ? (
-            <>
-              <button 
-                type="button" 
-                className="btn btn-primary" 
-                onClick={() => navigate(`/dracin/${episodeId}`)}
-              >
-                ← Kembali ke Detail Drama
-              </button>
-              <Link to="/dracin-latest" className="btn btn-secondary">
-                Lihat Drama Lainnya
-              </Link>
-            </>
-          ) : (
-            <>
-              <button 
-                type="button" 
-                className="btn btn-primary" 
-                onClick={() => {
-                  if (window.history.length > 1) {
-                    navigate(-1);
-                  } else {
-                    navigate('/');
-                  }
-                }}
-              >
-                ← Kembali
-              </button>
-              <Link to="/" className="btn btn-secondary">
-                Ke Beranda
-              </Link>
-            </>
+          <>
+            <button 
+              type="button" 
+              className="btn btn-primary" 
+              onClick={() => {
+                if (window.history.length > 1) {
+                  navigate(-1);
+                } else {
+                  navigate('/');
+                }
+              }}
+            >
+              ← Kembali
+            </button>
+            <Link to="/" className="btn btn-secondary">
+              Ke Beranda
+            </Link>
+          </>
           )}
         </div>
       </div>
@@ -506,13 +427,10 @@ const Watch = () => {
 
   const embedUrl = getEmbedUrl(videoUrl);
 
-  const isDramaBox = episodeData?.isDramaBox;
   const backAnimeId = animeData?.slug ?? animeData?.animeId ?? animeData?.id ?? episodeData?.animeId ?? episodeData?.animeSlug ?? episodeData?.slug;
-  const hasValidBackLink = isDramaBox || (backAnimeId != null && String(backAnimeId).trim() !== '');
-  const backPath = isDramaBox ? `/dracin/${episodeId}` : `/anime/${backAnimeId}`;
-  const backTitle = isDramaBox 
-    ? (episodeData.dramaTitle || 'Drama').substring(0, 40)
-    : (animeData?.title ? (typeof animeData.title === 'string' ? animeData.title.substring(0, 40) : animeData.title) : 'Anime');
+  const hasValidBackLink = backAnimeId != null && String(backAnimeId).trim() !== '';
+  const backPath = `/anime/${backAnimeId}`;
+  const backTitle = animeData?.title ? (typeof animeData.title === 'string' ? animeData.title.substring(0, 40) : animeData.title) : 'Anime';
 
   return (
     <div className="watch-page main-container">
@@ -648,11 +566,10 @@ const Watch = () => {
           </Link>
         )}
         
-        {/* Anime/DramaBox previous */}
+        {/* Anime previous */}
         {episodeData?.hasPrevEpisode && !episodeData?.navigation && (
           <Link
             to={`/watch/${episodeData.prevEpisode.episodeId || episodeId}`}
-            state={episodeData.isDramaBox ? { provider: 'dracin', episodeIndex: episodeData.prevEpisode.episodeIndex, dramaTitle: episodeData.dramaTitle } : undefined}
             className="nav-btn prev btn btn-secondary"
           >
             ← Episode Sebelumnya
@@ -669,11 +586,10 @@ const Watch = () => {
           </Link>
         )}
         
-        {/* Anime/DramaBox next */}
+        {/* Anime next */}
         {episodeData?.hasNextEpisode && !episodeData?.navigation && (
           <Link
             to={`/watch/${episodeData.nextEpisode.episodeId || episodeId}`}
-            state={episodeData.isDramaBox ? { provider: 'dracin', episodeIndex: episodeData.nextEpisode.episodeIndex, dramaTitle: episodeData.dramaTitle } : undefined}
             className="nav-btn next btn btn-primary"
           >
             Episode Berikutnya →

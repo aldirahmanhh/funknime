@@ -64,17 +64,14 @@ const AnimeCard = ({ anime, index = 0, innerRef, statusOverride, providerHint })
    // Route based on provider
    const detailPath = providerKey === 'donghua' 
      ? `/donghua/${animeId}`
-     : providerKey === 'dracin'
-       ? `/dracin/${animeId}`
-       : providerKey 
-         ? `/anime/${providerKey}/${animeId}` 
-         : `/anime/${animeId}`;
+     : providerKey 
+       ? `/anime/${providerKey}/${animeId}` 
+       : `/anime/${animeId}`;
 
    // Provider-specific colors
    const getProviderColor = (provider) => {
      if (!provider) return 'var(--color-primary)';
      const p = provider.toLowerCase();
-     if (p.includes('dracin')) return '#9B59B6'; // Purple for Dracin
      if (p.includes('donghua')) return '#FF6B6B'; // Red/Orange for Donghua
      if (p.includes('otakudesu')) return '#FFD700'; // Gold/Yellow
      if (p.includes('samehadaku')) return '#00D4FF'; // Cyan
@@ -84,19 +81,7 @@ const AnimeCard = ({ anime, index = 0, innerRef, statusOverride, providerHint })
 
    const providerColor = getProviderColor(finalProvider);
 
-   // Pass drama metadata in state for dracin (since getDracinDetail API is broken)
-   const linkState = providerKey === 'dracin' ? {
-     dramaInfo: {
-       bookId: animeId,
-       title,
-       poster: anime.poster || anime.coverWap,
-       introduction: anime.introduction,
-       chapterCount: anime.chapterCount,
-       playCount: anime.playCount,
-       corner: anime.corner,
-       tagV3s: anime.tagV3s,
-     }
-   } : undefined;
+   const linkState = undefined;
 
   return (
     <Link

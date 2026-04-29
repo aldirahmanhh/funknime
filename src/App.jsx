@@ -10,10 +10,6 @@ import DonghuaDetail from './components/DonghuaDetail'
 import DonghuaGenres from './components/DonghuaGenres'
 import DonghuaGenreFilter from './components/DonghuaGenreFilter'
 import DonghuaAZList from './components/DonghuaAZList'
-import DracinLatest from './components/DracinLatest'
-import DracinPopular from './components/DracinPopular'
-import DracinDetail from './components/DracinDetail'
-
 import UnifiedSearch from './components/UnifiedSearch'
 import AnimeDetail from './components/AnimeDetail'
 import Watch from './components/Watch'
@@ -47,9 +43,6 @@ function App() {
           <Route path="/donghua-genre/:slug" element={<DonghuaGenreFilter />} />
           <Route path="/donghua-az" element={<DonghuaAZList />} />
           <Route path="/donghua/:slug" element={<DonghuaDetail />} />
-          <Route path="/dracin-latest" element={<DracinLatest />} />
-          <Route path="/dracin-popular" element={<DracinPopular />} />
-          <Route path="/dracin/:slug" element={<DracinDetail />} />
           <Route path="/genres" element={<Genres />} />
           <Route path="/az-list" element={<AZList />} />
           <Route path="/schedule" element={<Schedule />} />
