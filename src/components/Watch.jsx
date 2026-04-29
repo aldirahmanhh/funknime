@@ -6,6 +6,7 @@ import { createPlayer } from '@videojs/react';
 import { VideoSkin, Video, videoFeatures } from '@videojs/react/video';
 import '@videojs/react/video/skin.css';
 import WatchLoading from './WatchLoading';
+import EmbedPlayer from './EmbedPlayer';
 
 const Player = createPlayer({ features: videoFeatures });
 
@@ -301,8 +302,8 @@ const Watch = () => {
               </VideoSkin>
             </Player.Provider>
           ) : iframeSrc ? (
-            /* Fallback: iframe */
-            <iframe src={iframeSrc} sandbox="allow-scripts allow-same-origin allow-forms allow-presentation" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen title={episodeData.title} style={{ width: '100%', height: '100%', border: 'none' }} onLoad={() => setSwitching(false)} />
+            /* Fallback: enhanced embed player */
+            <EmbedPlayer src={iframeSrc} title={episodeData.title} onLoad={() => setSwitching(false)} />
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
               <a href={videoUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary">Buka Video →</a>
