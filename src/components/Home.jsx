@@ -7,7 +7,6 @@ import AnimeCarousel from './AnimeCarousel';
 import Footer from './Footer';
 import { getWatchHistory, formatTime } from '../utils/watchHistory';
 
-const TRAKTEER_API_KEY = 'trapi-5JwaDliojNeKNsw5jPiI4Awa';
 const DAY_ORDER = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
 
 const Home = () => {
@@ -70,12 +69,13 @@ const Home = () => {
     fetchData();
     setWatchHistory(getWatchHistory());
 
-    // Fetch Trakteer top donors
-    fetch('https://api.trakteer.id/v1/public/supports?limit=10&page=1', {
-      headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest', 'key': TRAKTEER_API_KEY },
-    }).then(r => r.json()).then(d => {
-      if (d?.result?.data) setTopDonors(d.result.data);
-    }).catch(() => {});
+    // Fetch Trakteer top donors via proxy
+    fetch('/api/trakteer?action=supports&limit=10&page=1')
+      .then(r => r.json())
+      .then(d => {
+        if (d?.result?.data) setTopDonors(d.result.data);
+      })
+      .catch((err) => console.log('Trakteer fetch failed:', err));
 
     // Show donate popup after 30s for first-time visitors
     const shown = sessionStorage.getItem('donate_popup_shown');
