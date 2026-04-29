@@ -22,6 +22,7 @@ const Watch = () => {
   const [videoUrl, setVideoUrl] = useState('');
   const [switching, setSwitching] = useState(false);
   const [switchLabel, setSwitchLabel] = useState('');
+  const [videoFailed, setVideoFailed] = useState(false);
   const videoElRef = useRef(null);
   const saveTimerRef = useRef(null);
 
@@ -206,6 +207,7 @@ const Watch = () => {
     } else {
       setSwitching(false);
     }
+    setVideoFailed(false); // reset fallback on server change
     setSelectedServer(server);
   };
 
@@ -221,32 +223,23 @@ const Watch = () => {
     }
   };
 
-  // Known iframe-only domains (embed players that can't be played via Video.js)
-  const IFRAME_DOMAINS = ['desustream', 'ondesu', 'odvidhide', 'youtu', 'youtube', 'drive.google', 'dailymotion', 'streamtape', 'mp4upload', 'filemoon'];
-
-  const isIframeOnly = (url) => {
-    if (!url) return false;
-    const lower = url.toLowerCase();
-    return IFRAME_DOMAINS.some(d => lower.includes(d)) || lower.includes('/embed/');
-  };
-
-  const getEmbedUrl = (url) => {
-    if (!url) return '';
-    // If it's a known iframe embed domain → use iframe
-    if (isIframeOnly(url)) {
-      if (url.includes('youtube.com') || url.includes('youtu.be')) {
-        const v = url.split('v=')[1]?.split('&')[0] || url.split('/').pop();
-        return `https://www.youtube.com/embed/${v}`;
-      }
-      if (url.includes('drive.google.com')) {
-        const f = url.split('/d/')[1]?.split('/')[0];
-        return `https://drive.google.com/file/d/${f}/preview`;
-      }
-      return url; // iframe as-is
+  // Convert special URLs to embed format for iframe fallback
+  const toEmbedUrl = (url) => {
+    if (!url) return url;
+    if (url.includes('youtube.com') || url.includes('youtu.be')) {
+      const v = url.split('v=')[1]?.split('&')[0] || url.split('/').pop();
+      return `https://www.youtube.com/embed/${v}`;
     }
-    // Everything else → try Video.js (direct play)
-    return null;
+    if (url.includes('drive.google.com')) {
+      const f = url.split('/d/')[1]?.split('/')[0];
+      return `https://drive.google.com/file/d/${f}/preview`;
+    }
+    return url;
   };
+
+  // Determine player mode: 'videojs' or 'iframe'
+  // Try Video.js first, if it fails (videoFailed=true) → fallback to iframe
+  const useVideoJs = videoUrl && !videoFailed;
 
   // ─── Render ───
   if (loading) return <div className="loading-container main-container"><div className="spinner" /><p>Memuat video...</p></div>;
@@ -266,7 +259,7 @@ const Watch = () => {
     );
   }
 
-  const embedUrl = getEmbedUrl(videoUrl);
+  const iframeSrc = videoFailed ? toEmbedUrl(videoUrl) : null;
   const backId = animeData?.slug ?? animeData?.animeId ?? animeData?.id ?? episodeData?.animeId ?? episodeData?.animeSlug;
   const hasBack = backId != null && String(backId).trim() !== '';
 
@@ -286,20 +279,30 @@ const Watch = () => {
       <div className="video-player-wrapper" style={{ position: 'relative' }}>
         {switching && <WatchLoading message="Mengganti server..." serverName={switchLabel} />}
         {videoUrl ? (
-          embedUrl === null ? (
-            /* Direct video → @videojs/react */
+          useVideoJs ? (
+            /* Try Video.js first */
             <Player.Provider key={videoUrl}>
               <VideoSkin>
                 <Video
-                  ref={videoElRef}
+                  ref={(el) => {
+                    videoElRef.current = el;
+                    if (el) {
+                      el.onerror = () => {
+                        console.log('[Watch] Video.js failed, falling back to iframe');
+                        setVideoFailed(true);
+                        setSwitching(false);
+                      };
+                    }
+                  }}
                   src={videoUrl}
                   playsInline
                   autoPlay
                 />
               </VideoSkin>
             </Player.Provider>
-          ) : embedUrl ? (
-            <iframe src={embedUrl} sandbox="allow-scripts allow-same-origin allow-forms allow-presentation" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen title={episodeData.title} style={{ width: '100%', height: '100%', border: 'none' }} onLoad={() => setSwitching(false)} />
+          ) : iframeSrc ? (
+            /* Fallback: iframe */
+            <iframe src={iframeSrc} sandbox="allow-scripts allow-same-origin allow-forms allow-presentation" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen title={episodeData.title} style={{ width: '100%', height: '100%', border: 'none' }} onLoad={() => setSwitching(false)} />
           ) : (
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
               <a href={videoUrl} target="_blank" rel="noopener noreferrer" className="btn btn-primary">Buka Video →</a>
