@@ -1,122 +1,106 @@
-# 🎬 MrFunk — Anime Streaming Platform
-
 <div align="center">
+  <img src="public/logo.png" alt="MrFunk" width="120" />
+  <h1>MrFunk</h1>
+  <p><b>Nonton anime & donghua sub Indo — satu tempat, semua provider.</b></p>
 
-**MrFunk** is a modern anime & donghua streaming platform built with **React + Vite**, powered by the [Sankavollerei Anime REST API](https://www.sankavollerei.com/anime/).
+  ![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)
+  ![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)
+  ![Vercel](https://img.shields.io/badge/Deployed-Vercel-000?logo=vercel)
+  ![License](https://img.shields.io/badge/License-MIT-green)
+  [![Trakteer](https://img.shields.io/badge/Trakteer-Donasi-red?logo=buymeacoffee&logoColor=white)](https://trakteer.id/aldirahmanhh)
 
-Stream anime sub Indo with a combined catalog from **Otakudesu** & **Samehadaku** — all in one place.
-
-[🌐 Live Demo](https://mrfunk.vercel.app) · [☕ Support via Trakteer](https://trakteer.id/aldirahmanhh)
-
+  <br/>
+  <a href="https://kenkazumi.biz.id"><b>🌐 Live Site</b></a> &nbsp;·&nbsp;
+  <a href="https://trakteer.id/aldirahmanhh"><b>☕ Trakteer</b></a> &nbsp;·&nbsp;
+  <a href="https://github.com/aldirahmanhh/Funknime/issues"><b>🐛 Report Bug</b></a>
 </div>
 
 ---
 
-## ✨ Features
+## Apa ini?
 
-- 🔍 **Unified Search** — Search across Otakudesu & Samehadaku simultaneously
-- 📺 **Multi-Provider Streaming** — Auto-fallback between providers for best availability
-- 🐉 **Donghua Support** — Full donghua catalog with genres, A-Z list, and streaming
-- 📅 **Schedule** — Daily anime airing schedule
-- 🎭 **Genre Browser** — Browse anime by genre from multiple providers
-- 🔤 **A-Z List** — Alphabetical anime & donghua browsing
-- 🕐 **Watch History** — Resume from last watched minute/second with progress bar
-- ☕ **Trakteer Integration** — Donation system with top donor leaderboard
-- 🎨 **Dark Neobrutalism UI** — Purple-themed modern design with smooth animations
-- 📱 **Fully Responsive** — Optimized for mobile, tablet, and desktop
-- ⚡ **PWA Ready** — Installable as a Progressive Web App
-- 🛡️ **Anti-Ads** — Built-in ad popup blocker for streaming iframes
+MrFunk ngambil data dari beberapa provider anime (Otakudesu, Samehadaku, dll) lewat satu API, terus nampilin semuanya di satu website yang enak dipake. Jadi ga perlu buka banyak situs buat nyari anime.
 
----
+Fitur utamanya:
+- **Multi-provider** — otomatis fallback kalau satu server mati
+- **Donghua** — bukan cuma anime, donghua juga ada
+- **Lanjut nonton** — nyimpen progress sampai menit & detik terakhir
+- **Tanpa login** — langsung pake, ga ribet
 
-## 🛠 Tech Stack
+## Screenshot
 
-| Technology | Purpose |
+> _coming soon_
+
+## Tech
+
+| | |
 |---|---|
-| **React 19** | UI Framework |
-| **Vite 8** | Build Tool |
-| **React Router 7** | Client-side Routing |
-| **Sankavollerei API** | Anime Data Source |
-| **Trakteer API** | Donation Integration |
-| **Vercel** | Hosting & Deployment |
+| Frontend | React 19 + Vite 8 |
+| Routing | React Router v7 |
+| Hosting | Vercel (serverless) |
+| Data | [Sankavollerei API](https://www.sankavollerei.com) |
+| Donasi | [Trakteer API](https://trakteer.id) |
 
----
-
-## 🌐 API Credits
-
-This project uses the **Sankavollerei Anime REST API** as its primary data source:
-
-```
-Base URL: https://www.sankavollerei.com/anime/
-Rate Limit: 50 requests/minute
-```
-
-**Huge thanks to [Sanka Vollerei](https://www.sankavollerei.com)** for providing this free anime API! 🙏
-
----
-
-## 📦 Installation
+## Jalanin di lokal
 
 ```bash
-# Clone the repository
 git clone https://github.com/aldirahmanhh/Funknime.git
 cd Funknime
-
-# Install dependencies
 npm install
-
-# Run development server
 npm run dev
+```
 
-# Build for production
+Build production:
+```bash
 npm run build
 ```
 
----
-
-## 📁 Project Structure
+## Struktur
 
 ```
-MrFunk/
-├── src/
-│   ├── components/     # React components (Home, Watch, AnimeCard, etc.)
-│   ├── contexts/       # ThemeContext
-│   ├── hooks/          # useDebounce, useInfiniteScroll
-│   ├── services/       # API service layer
-│   ├── utils/          # Watch history utilities
-│   ├── App.jsx         # Main app with routing
-│   └── main.jsx        # Entry point
-├── public/             # Static assets, PWA manifest
-└── index.html          # HTML template with SEO meta tags
+src/
+├── components/    # semua halaman & komponen
+├── contexts/      # theme context
+├── hooks/         # useDebounce, useInfiniteScroll
+├── services/      # api.js (fetch + cache + rate limit)
+├── utils/         # watch history (localStorage)
+└── main.jsx       # entry point
 ```
 
----
+## Fitur lengkap
 
-## ☕ Support
+- 🔍 Search gabungan (Otakudesu + Samehadaku)
+- 📺 Streaming multi-server dengan quality selector
+- 🐉 Donghua (ongoing, completed, genre, A-Z)
+- 📅 Jadwal tayang harian
+- 🎭 Browse genre dari 2 provider
+- 🔤 Daftar A-Z (anime & donghua)
+- 🕐 Watch history + resume dari menit terakhir
+- ☕ Trakteer donasi + leaderboard top donatur
+- 🛡️ Anti-ads bawaan buat iframe streaming
+- 📱 Responsive (mobile, tablet, desktop)
+- 🎨 Dark theme + purple neobrutalism UI
 
-If you enjoy using MrFunk, consider supporting the project:
+## Credits
 
-- **[Trakteer](https://trakteer.id/aldirahmanhh)** — Buy me a coffee! ☕
-- **Star this repo** ⭐ — It helps a lot!
+- **API** — [Sankavollerei](https://www.sankavollerei.com) (gratis, rate limit 50 req/min)
+- **Donasi** — [Trakteer](https://trakteer.id/aldirahmanhh)
+- **Icons** — Emoji native
 
----
+## Dukung project ini
 
-## 📜 Disclaimer
+MrFunk itu gratis & open source. Kalau kamu suka dan mau bantu biaya server + domain:
 
-This project is created for **educational purposes only**. All anime content and streaming sources belong to their respective owners. We do not host any video content.
+[![Trakteer](https://img.shields.io/badge/Trakteer-Donasi_Sekarang-red?style=for-the-badge&logo=buymeacoffee&logoColor=white)](https://trakteer.id/aldirahmanhh)
 
----
+Atau cukup kasih ⭐ di repo ini — itu juga udah bantu banget.
 
-## 📄 License
+## Disclaimer
 
-MIT License — feel free to fork and modify.
+Project ini dibuat buat belajar. Semua konten anime disediakan oleh pihak ketiga, MrFunk ga nyimpen file video apapun.
 
 ---
 
 <div align="center">
-
-Made with 💜 by [aldirahmanhh](https://github.com/aldirahmanhh)
-
-**API powered by [Sankavollerei](https://www.sankavollerei.com)** 🙏
-
+  <sub>Made with 💜 by <a href="https://github.com/aldirahmanhh">aldirahmanhh</a></sub>
 </div>

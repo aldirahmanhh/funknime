@@ -145,10 +145,9 @@ const Home = () => {
             </p>
             <div style={{ background: 'var(--color-bg-alt)', borderRadius: '12px', padding: '14px', marginBottom: '18px', border: '1px solid var(--color-border)' }}>
               <div style={{ fontSize: 'var(--text-xs)', color: 'var(--color-text-dim)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 700 }}>Biaya Bulanan</div>
-              <div style={{ display: 'flex', justifyContent: 'space-around', gap: '8px' }}>
-                <div><div style={{ fontSize: 'var(--text-lg)', fontWeight: 800, color: 'var(--color-primary)' }}>🖥️</div><div style={{ fontSize: '0.65rem', color: 'var(--color-text-muted)', marginTop: '2px' }}>Server</div></div>
-                <div><div style={{ fontSize: 'var(--text-lg)', fontWeight: 800, color: 'var(--color-secondary)' }}>🌐</div><div style={{ fontSize: '0.65rem', color: 'var(--color-text-muted)', marginTop: '2px' }}>Domain</div></div>
-                <div><div style={{ fontSize: 'var(--text-lg)', fontWeight: 800, color: 'var(--color-accent)' }}>⚡</div><div style={{ fontSize: '0.65rem', color: 'var(--color-text-muted)', marginTop: '2px' }}>CDN & API</div></div>
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '32px' }}>
+                <div style={{ textAlign: 'center' }}><div style={{ fontSize: '1.5rem' }}>🖥️</div><div style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', marginTop: '4px', fontWeight: 600 }}>Server Hosting</div></div>
+                <div style={{ textAlign: 'center' }}><div style={{ fontSize: '1.5rem' }}>🌐</div><div style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', marginTop: '4px', fontWeight: 600 }}>Domain</div></div>
               </div>
             </div>
             <a href="https://trakteer.id/aldirahmanhh" target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginBottom: '10px', padding: '14px', fontSize: 'var(--text-base)', borderRadius: '12px' }}>
