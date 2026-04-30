@@ -10,19 +10,12 @@ import { useState, useRef, useCallback } from 'react';
  */
 const EmbedPlayer = ({ src, title, onLoad }) => {
   const [loaded, setLoaded] = useState(false);
-  const [shieldActive, setShieldActive] = useState(true);
-  const [theater, setTheater] = useState(false);
   const iframeRef = useRef(null);
 
   const handleLoad = useCallback(() => {
     setLoaded(true);
     onLoad?.();
   }, [onLoad]);
-
-  const handleShieldClick = () => {
-    // First click disarms the shield, second click goes through to iframe
-    setShieldActive(false);
-  };
 
   const toggleFullscreen = () => {
     const el = iframeRef.current;
@@ -36,7 +29,6 @@ const EmbedPlayer = ({ src, title, onLoad }) => {
 
   const reloadIframe = () => {
     setLoaded(false);
-    setShieldActive(true);
     const el = iframeRef.current;
     if (el) el.src = src;
   };
@@ -71,42 +63,7 @@ const EmbedPlayer = ({ src, title, onLoad }) => {
         </div>
       )}
 
-      {/* Ad click shield - blocks first click (usually ad redirect) */}
-      {shieldActive && loaded && (
-        <div
-          onClick={handleShieldClick}
-          style={{
-            position: 'absolute', inset: 0, zIndex: 4,
-            cursor: 'pointer',
-          }}
-        >
-          <div style={{
-            position: 'absolute', top: '50%', left: '50%',
-            transform: 'translate(-50%, -50%)',
-            background: 'rgba(0,0,0,0.6)',
-            backdropFilter: 'blur(4px)',
-            borderRadius: '50%',
-            width: '64px', height: '64px',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            border: '2px solid rgba(255,255,255,0.2)',
-            transition: 'transform 0.2s ease',
-          }}>
-            <span style={{ fontSize: '1.5rem', marginLeft: '4px', color: '#fff' }}>▶</span>
-          </div>
-          <div style={{
-            position: 'absolute', bottom: '12px', left: '50%',
-            transform: 'translateX(-50%)',
-            background: 'rgba(0,0,0,0.7)',
-            padding: '4px 12px', borderRadius: '20px',
-            fontSize: '0.7rem', color: 'rgba(255,255,255,0.7)',
-            whiteSpace: 'nowrap',
-          }}>
-            Klik untuk mulai menonton
-          </div>
-        </div>
-      )}
-
-      {/* Iframe */}
+      {/* Iframe — no shield, user interacts directly with embed controls */}
       <iframe
         ref={iframeRef}
         src={src}
@@ -123,18 +80,17 @@ const EmbedPlayer = ({ src, title, onLoad }) => {
         }}
       />
 
-      {/* Control bar */}
-      {loaded && !shieldActive && (
+      {/* Top-right control buttons — small, doesn't block embed controls */}
+      {loaded && (
         <div style={{
-          position: 'absolute', bottom: 0, left: 0, right: 0,
-          display: 'flex', justifyContent: 'flex-end',
-          gap: '4px', padding: '6px 8px',
-          background: 'linear-gradient(transparent, rgba(0,0,0,0.7))',
+          position: 'absolute', top: '6px', right: '6px',
+          display: 'flex', gap: '4px',
           zIndex: 3, opacity: 0,
           transition: 'opacity 0.2s ease',
+          pointerEvents: 'none',
         }}
-        onMouseEnter={(e) => e.currentTarget.style.opacity = 1}
-        onMouseLeave={(e) => e.currentTarget.style.opacity = 0}
+        onMouseEnter={(e) => { e.currentTarget.style.opacity = 1; e.currentTarget.style.pointerEvents = 'auto'; }}
+        onMouseLeave={(e) => { e.currentTarget.style.opacity = 0; e.currentTarget.style.pointerEvents = 'none'; }}
         >
           <ControlBtn icon="🔄" label="Reload" onClick={reloadIframe} />
           <ControlBtn icon="⛶" label="Fullscreen" onClick={toggleFullscreen} />
