@@ -19,6 +19,7 @@ import Schedule from './components/Schedule'
 import WatchHistory from './components/WatchHistory'
 import ThemeSelector from './components/ThemeSelector'
 import { ThemeProvider } from './contexts/ThemeContext'
+import InstallBanner from './components/InstallBanner'
 
 function App() {
   return (
@@ -32,6 +33,7 @@ function App() {
         </div>
         <Header />
         <ThemeSelector />
+        <InstallBanner />
         <main id="main-content">
         <Routes>
           <Route path="/" element={<Home />} />
