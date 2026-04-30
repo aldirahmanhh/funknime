@@ -29,7 +29,7 @@ const Footer = () => {
             <p className="footer-tagline">
               Tempat nonton anime & donghua sub Indo paling lengkap. Gratis, kualitas terbaik.
             </p>
-            <a href="https://trakteer.id/aldirahmanhh" target="_blank" rel="noopener noreferrer" className="footer-donate-btn">
+            <a href="https://teer.id/anrizz" target="_blank" rel="noopener noreferrer" className="footer-donate-btn">
               ☕ Dukung Kami
             </a>
           </div>
@@ -53,7 +53,7 @@ const Footer = () => {
             <div className="footer-col">
               <h4 className="footer-col-title">Bantuan</h4>
               <button type="button" className="footer-link footer-link-btn" onClick={() => setShowReport(true)}>Lapor Bug</button>
-              <a href="https://trakteer.id/aldirahmanhh" target="_blank" rel="noopener noreferrer" className="footer-link">Donasi</a>
+              <a href="https://teer.id/anrizz" target="_blank" rel="noopener noreferrer" className="footer-link">Donasi</a>
             </div>
           </div>
 

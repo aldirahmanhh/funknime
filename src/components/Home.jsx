@@ -150,7 +150,7 @@ const Home = () => {
                 <div style={{ textAlign: 'center' }}><div style={{ fontSize: '1.5rem' }}>🌐</div><div style={{ fontSize: '0.7rem', color: 'var(--color-text-muted)', marginTop: '4px', fontWeight: 600 }}>Domain</div></div>
               </div>
             </div>
-            <a href="https://trakteer.id/aldirahmanhh" target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginBottom: '10px', padding: '14px', fontSize: 'var(--text-base)', borderRadius: '12px' }}>
+            <a href="https://teer.id/anrizz" target="_blank" rel="noopener noreferrer" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginBottom: '10px', padding: '14px', fontSize: 'var(--text-base)', borderRadius: '12px' }}>
               ☕ Donasi via Trakteer
             </a>
             <button onClick={() => setShowDonatePopup(false)} style={{ background: 'none', border: 'none', color: 'var(--color-text-dim)', fontSize: 'var(--text-xs)', cursor: 'pointer', marginTop: '4px', padding: '8px' }}>Nanti saja, lanjut nonton →</button>
@@ -261,7 +261,7 @@ const Home = () => {
         <section className="section">
           <div className="section-header">
             <h2 className="section-title">💜 Top Donatur</h2>
-            <a href="https://trakteer.id/aldirahmanhh" target="_blank" rel="noopener noreferrer" className="view-all">Donasi juga →</a>
+            <a href="https://teer.id/anrizz" target="_blank" rel="noopener noreferrer" className="view-all">Donasi juga →</a>
           </div>
           <div style={{ background: 'var(--color-surface)', border: '2px solid var(--color-border)', borderRadius: 'var(--radius-lg)', overflow: 'hidden' }}>
             {topDonors.slice(0, 5).map((donor, idx) => (

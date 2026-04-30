@@ -7,11 +7,11 @@
   ![Vite](https://img.shields.io/badge/Vite-8-646CFF?logo=vite&logoColor=white)
   ![Vercel](https://img.shields.io/badge/Deployed-Vercel-000?logo=vercel)
   ![License](https://img.shields.io/badge/License-MIT-green)
-  [![Trakteer](https://img.shields.io/badge/Trakteer-Donasi-red?logo=buymeacoffee&logoColor=white)](https://trakteer.id/aldirahmanhh)
+  [![Trakteer](https://img.shields.io/badge/Trakteer-Donasi-red?logo=buymeacoffee&logoColor=white)](https://teer.id/anrizz)
 
   <br/>
   <a href="https://kenkazumi.biz.id"><b>🌐 Live Site</b></a> &nbsp;·&nbsp;
-  <a href="https://trakteer.id/aldirahmanhh"><b>☕ Trakteer</b></a> &nbsp;·&nbsp;
+  <a href="https://teer.id/anrizz"><b>☕ Trakteer</b></a> &nbsp;·&nbsp;
   <a href="https://github.com/aldirahmanhh/Funknime/issues"><b>🐛 Report Bug</b></a>
 </div>
 
@@ -84,14 +84,14 @@ src/
 ## Credits
 
 - **API** — [Sankavollerei](https://www.sankavollerei.com) (gratis, rate limit 50 req/min)
-- **Donasi** — [Trakteer](https://trakteer.id/aldirahmanhh)
+- **Donasi** — [Trakteer](https://teer.id/anrizz)
 - **Icons** — Emoji native
 
 ## Dukung project ini
 
 MrFunk itu gratis & open source. Kalau kamu suka dan mau bantu biaya server + domain:
 
-[![Trakteer](https://img.shields.io/badge/Trakteer-Donasi_Sekarang-red?style=for-the-badge&logo=buymeacoffee&logoColor=white)](https://trakteer.id/aldirahmanhh)
+[![Trakteer](https://img.shields.io/badge/Trakteer-Donasi_Sekarang-red?style=for-the-badge&logo=buymeacoffee&logoColor=white)](https://teer.id/anrizz)
 
 Atau cukup kasih ⭐ di repo ini — itu juga udah bantu banget.
 
