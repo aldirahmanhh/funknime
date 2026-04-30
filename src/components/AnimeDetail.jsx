@@ -120,7 +120,10 @@ const AnimeDetail = () => {
     );
   }
 
-  const batchLink = anime?.batch || batchUrl;
+  // Only use batch if it's a valid URL string (not object)
+  const batchLink = (typeof batchUrl === 'string' && batchUrl.startsWith('http')) ? batchUrl
+    : (typeof anime?.batch === 'string' && anime.batch.startsWith('http')) ? anime.batch
+    : null;
   const providerLabel = (() => {
     const p = (providerUsed || providerParam || 'otakudesu').toLowerCase();
     if (p === 'samehadaku') return 'Samehadaku';
