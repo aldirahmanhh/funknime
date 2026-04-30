@@ -63,11 +63,10 @@ const EmbedPlayer = ({ src, title, onLoad }) => {
         </div>
       )}
 
-      {/* Iframe — no shield, user interacts directly with embed controls */}
+      {/* Iframe — no sandbox (some servers like vidhide reject sandboxed iframes) */}
       <iframe
         ref={iframeRef}
         src={src}
-        sandbox="allow-scripts allow-same-origin allow-forms allow-presentation allow-popups allow-popups-to-escape-sandbox"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
         allowFullScreen
         title={title}
