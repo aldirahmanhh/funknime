@@ -229,18 +229,19 @@
 /* ========== CARD PROVIDER TAG ========== */
 .card-provider-tag {
   display: inline-block;
-  padding: 1px 6px;
+  padding: 2px 7px;
   font-size: 0.6rem;
   font-weight: 700;
   color: var(--color-primary);
-  border: 1px solid var(--color-primary);
-  border-radius: var(--radius-sm);
-  margin-top: 2px;
-  opacity: 0.8;
+  background: rgba(147, 51, 234, 0.08);
+  border: 1px solid rgba(147, 51, 234, 0.3);
+  border-radius: var(--radius-full);
+  margin-top: 3px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   max-width: 100%;
+  letter-spacing: 0.02em;
 }
 
 /* Breadcrumb */
