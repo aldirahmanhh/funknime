@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /api/
 
-Sitemap: https://mrfunk.my.id/sitemap.xml
+Sitemap: https://www.mrfunk.my.id/sitemap.xml
