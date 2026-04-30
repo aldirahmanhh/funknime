@@ -57,13 +57,36 @@ const AnimeDetail = () => {
 
   useEffect(() => {
     if ((providerUsed || (providerParam || 'otakudesu').toLowerCase()) !== 'otakudesu') return;
-    if (anime?.batch && typeof anime.batch === 'string') { setBatchUrl(anime.batch); return; }
+    // Extract batch URL from various possible formats
+    const extractBatchUrl = (val) => {
+      if (!val) return null;
+      if (typeof val === 'string' && val.startsWith('http')) return val;
+      if (typeof val === 'object') {
+        // Could be { url: '...' } or { batchUrl: '...' } or { downloadUrl: '...' }
+        const u = val.url || val.batchUrl || val.downloadUrl || val.href;
+        if (typeof u === 'string' && u.startsWith('http')) return u;
+        // Could be array of links
+        if (Array.isArray(val)) {
+          const first = val[0];
+          if (typeof first === 'string') return first;
+          if (first?.url) return first.url;
+        }
+        // Nested: { list: [{ url }] }
+        if (Array.isArray(val.list) && val.list[0]?.url) return val.list[0].url;
+      }
+      return null;
+    };
+
+    if (anime?.batch) {
+      const url = extractBatchUrl(anime.batch);
+      if (url) { setBatchUrl(url); return; }
+    }
     const slugOrId = anime?.slug ?? anime?.animeId ?? animeId;
     if (!slugOrId) return;
     setBatchLoading(true);
     animeAPI.getBatch(slugOrId)
       .then((res) => {
-        const url = res?.data?.url || res?.data?.batchUrl || res?.data?.downloadUrl || res?.url || null;
+        const url = extractBatchUrl(res?.data) || extractBatchUrl(res);
         if (url) setBatchUrl(url);
       })
       .catch(() => {})
