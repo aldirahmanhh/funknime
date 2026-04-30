@@ -48,10 +48,19 @@ const Watch = () => {
 
   // ─── Fetch episode ───
   useEffect(() => {
+    let cancelled = false;
+
+    // Reset ALL state when episodeId changes
+    setEpisodeData(null);
+    setAnimeData(null);
+    setVideoUrl('');
+    setError(null);
+    setLoading(true);
+    setVideoFailed(false);
+    setSwitching(false);
+
     const fetchEpisodeData = async () => {
       try {
-        setLoading(true);
-        setError(null);
         const stateProvider = location.state?.provider;
         const allProviders = [
           { fn: () => animeAPI.getDonghuaEpisode(episodeId), name: 'donghua' },
@@ -71,6 +80,7 @@ const Watch = () => {
 
         let data = null, usedProvider = null, lastError = null;
         for (const p of providers) {
+          if (cancelled) return;
           try {
             const result = await p.fn();
             if (result?.streaming?.servers || result?.data?.defaultStreamingUrl || result?.data?.servers || result?.data?.server) {
@@ -78,10 +88,12 @@ const Watch = () => {
             }
           } catch (e) { lastError = e; }
         }
+        if (cancelled) return;
         if (!data) throw new Error(lastError?.message || 'Episode tidak ditemukan.');
 
         // Donghua
         if (usedProvider === 'donghua' && data.streaming) {
+          if (cancelled) return;
           const dd = {
             episode: data.episode,
             defaultStreamingUrl: data.streaming.main_url?.url || data.streaming.servers[0]?.url,
@@ -97,6 +109,8 @@ const Watch = () => {
           }
           setLoading(false); return;
         }
+
+        if (cancelled) return;
 
         // Anime
         const raw = data?.data || null;
@@ -119,18 +133,25 @@ const Watch = () => {
           if (fq.serverList?.[0]) setSelectedServer(fq.serverList[0]);
         }
 
+        if (cancelled) return;
+
         if (normalized?.animeId) {
           try {
             const animeRes = await animeAPI.getAnimeDetail(normalized.animeId);
+            if (cancelled) return;
             setAnimeData(animeRes?.data || null);
             addToWatchHistory({ animeId: animeRes?.data?.animeId || normalized.animeId, episodeId, animeTitle: animeRes?.data?.title || normalized.title || episodeId, episodeTitle: normalized.title || episodeId, poster: animeRes?.data?.poster || animeRes?.data?.poster_url || '', provider: usedProvider || 'otakudesu' });
           } catch {}
         }
-      } catch (err) { setError(err?.message ?? String(err)); }
-      finally { setLoading(false); }
+      } catch (err) {
+        if (!cancelled) setError(err?.message ?? String(err));
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     };
     fetchEpisodeData();
-  }, [episodeId, location.state?.provider]);
+    return () => { cancelled = true; };
+  }, [episodeId]);
 
   // ─── Video.js progress tracking via native ref ───
   useEffect(() => {
