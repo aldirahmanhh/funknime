@@ -110,7 +110,7 @@ const EmbedPlayer = ({ src, title, onLoad }) => {
       <iframe
         ref={iframeRef}
         src={src}
-        sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"
+        sandbox="allow-scripts allow-same-origin allow-forms allow-presentation allow-popups allow-popups-to-escape-sandbox"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
         allowFullScreen
         title={title}

@@ -54,13 +54,19 @@ const trackRequest = () => {
 // REQUEST QUEUE — serialize requests to avoid burst
 // ═══════════════════════════════════════════════════════
 let requestQueue = Promise.resolve();
-const MIN_DELAY_MS = 200; // min 200ms between requests
+const MIN_DELAY_MS = 100; // min 100ms between requests
 
 const enqueue = (fn) => {
   requestQueue = requestQueue.then(() =>
     new Promise((resolve) => setTimeout(resolve, MIN_DELAY_MS))
   ).then(fn);
   return requestQueue;
+};
+
+// Direct fetch (skip queue) for high-priority requests like episode detail
+const fetchDirect = async (fn) => {
+  trackRequest();
+  return fn();
 };
 
 // Debounce function
@@ -158,7 +164,7 @@ export const clearCachePattern = (pattern) => {
 };
 
 // Enhanced API fetching with smart cache, global rate limit, and request queue
-const fetchAnime = async (endpoint, provider = 'default') => {
+const fetchAnime = async (endpoint, provider = 'default', { priority = false } = {}) => {
   const url = `${API_BASE_URL}${endpoint}`;
   
   // 1. Check cache first — no network needed
@@ -167,19 +173,16 @@ const fetchAnime = async (endpoint, provider = 'default') => {
 
   // 2. Check global rate limit
   if (isRateLimited()) {
-    // Wait and retry once instead of throwing immediately
-    await new Promise(r => setTimeout(r, 2000));
+    await new Promise(r => setTimeout(r, 1500));
     if (isRateLimited()) {
       throw new Error('Server sedang sibuk. Tunggu sebentar lalu coba lagi.');
     }
   }
 
-  // 3. Enqueue request (serialized with min delay)
-  return enqueue(async () => {
-    // Double-check cache (another request might have filled it while queued)
+  // 3. Priority requests skip queue (episode detail, server fetch)
+  const doFetch = async () => {
     const cached2 = getFromCache(url);
     if (cached2) return cached2;
-
     trackRequest();
 
     try {
@@ -227,7 +230,11 @@ const fetchAnime = async (endpoint, provider = 'default') => {
       }
       throw error;
     }
-  });
+  };
+
+  // Priority requests execute immediately, others go through queue
+  if (priority) return doFetch();
+  return enqueue(doFetch);
 };
 
 // Provider-specific API endpoints
@@ -241,8 +248,8 @@ const providers = {
     getGenreAnime: (slug) => fetchAnime(`/genre/${slug}`, 'otakudesu'),
     search: (keyword) => fetchAnime(`/search/${encodeURIComponent(keyword)}`, 'otakudesu'),
     getAnimeDetail: (slug) => fetchAnime(`/anime/${slug}`, 'otakudesu'),
-    getEpisodeDetail: (slug) => fetchAnime(`/episode/${slug}`, 'otakudesu'),
-    getStreamingServer: (serverId) => fetchAnime(`/server/${serverId}`, 'otakudesu'),
+    getEpisodeDetail: (slug) => fetchAnime(`/episode/${slug}`, 'otakudesu', { priority: true }),
+    getStreamingServer: (serverId) => fetchAnime(`/server/${serverId}`, 'otakudesu', { priority: true }),
     getBatch: (slug) => fetchAnime(`/batch/${slug}`, 'otakudesu'),
     getUnlimited: () => fetchAnime('/unlimited', 'otakudesu'),
   },
@@ -269,7 +276,7 @@ const providers = {
     getGenreAnime: (genreId) => fetchAnime(`/samehadaku/genres/${genreId}`, 'samehadaku'),
     search: (keyword) => fetchAnime(`/samehadaku/search?q=${encodeURIComponent(keyword)}`, 'samehadaku'),
     getAnimeDetail: (animeId) => fetchAnime(`/samehadaku/anime/${animeId}`, 'samehadaku'),
-    getEpisodeDetail: (episodeId) => fetchAnime(`/samehadaku/episode/${episodeId}`, 'samehadaku'),
+    getEpisodeDetail: (episodeId) => fetchAnime(`/samehadaku/episode/${episodeId}`, 'samehadaku', { priority: true }),
     getStreamingServer: (serverId) => fetchAnime(`/samehadaku/server/${serverId}`, 'samehadaku'),
     getBatchList: () => fetchAnime('/samehadaku/batch', 'samehadaku'),
     getBatchDetail: (batchId) => fetchAnime(`/samehadaku/batch/${batchId}`, 'samehadaku'),
@@ -314,7 +321,7 @@ const providers = {
     getGenreAnime: (slug) => fetchAnime(`/stream/genres/${slug}`, 'stream'),
     search: (keyword) => fetchAnime(`/stream/search/${encodeURIComponent(keyword)}`, 'stream'),
     getAnimeDetail: (slug) => fetchAnime(`/stream/anime/${slug}`, 'stream'),
-    getEpisodeDetail: (slug) => fetchAnime(`/stream/episode/${slug}`, 'stream'),
+    getEpisodeDetail: (slug) => fetchAnime(`/stream/episode/${slug}`, 'stream', { priority: true }),
   },
 };
 
@@ -727,7 +734,7 @@ export const animeAPI = {
 
   // Get Donghua episode
   getDonghuaEpisode: async (slug) => {
-    return fetchAnime(`/donghua/episode/${slug}`, 'donghua');
+    return fetchAnime(`/donghua/episode/${slug}`, 'donghua', { priority: true });
   },
 
   // Get Donghua genres
