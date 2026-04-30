@@ -2,4 +2,4 @@ User-agent: *
 Allow: /
 Disallow: /api/
 
-Sitemap: https://kenkazumi.biz.id/sitemap.xml
+Sitemap: https://mrfunk.my.id/sitemap.xml
