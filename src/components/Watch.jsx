@@ -171,6 +171,26 @@ const Watch = () => {
     };
   }, [videoUrl, episodeId]);
 
+  // ─── Auto-rotate on fullscreen (mobile) ───
+  useEffect(() => {
+    const onFullscreenChange = () => {
+      try {
+        if (document.fullscreenElement) {
+          screen.orientation?.lock?.('landscape').catch(() => {});
+        } else {
+          screen.orientation?.unlock?.();
+        }
+      } catch {}
+    };
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', onFullscreenChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', onFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', onFullscreenChange);
+      try { screen.orientation?.unlock?.(); } catch {}
+    };
+  }, []);
+
   // ─── Anti-ads ───
   useEffect(() => {
     const adP = ['doubleclick.net', 'googlesyndication.com', 'popads.net', 'popcash.net', 'adsterra.com', 'exoclick.com'];
