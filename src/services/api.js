@@ -1,32 +1,66 @@
 const API_BASE_URL = 'https://www.sankavollerei.com/anime';
-const cache = new Map();
-const rateLimitMap = new Map();
 
-// Cache implementation
-const getFromCache = (url) => cache.get(url);
-const setCache = (url, data) => {
-  cache.set(url, data);
-  // Clear cache after 5 minutes
-  setTimeout(() => cache.delete(url), 5 * 60 * 1000);
+// ═══════════════════════════════════════════════════════
+// SMART CACHE — different TTL based on data type
+// ═══════════════════════════════════════════════════════
+const cache = new Map();
+
+const CACHE_TTL = {
+  long:   30 * 60 * 1000,  // 30 min — genres, az-list, schedule
+  medium: 10 * 60 * 1000,  // 10 min — home, ongoing, completed
+  short:   3 * 60 * 1000,  //  3 min — episode detail, search
 };
 
-// Rate limiting implementation (50 requests per minute)
-const isRateLimited = (url) => {
+const getCacheTTL = (url) => {
+  if (url.includes('/genre') || url.includes('/unlimited') || url.includes('/schedule'))
+    return CACHE_TTL.long;
+  if (url.includes('/search') || url.includes('/episode') || url.includes('/server'))
+    return CACHE_TTL.short;
+  return CACHE_TTL.medium;
+};
+
+const getFromCache = (url) => {
+  const entry = cache.get(url);
+  if (!entry) return null;
+  if (Date.now() > entry.expiry) { cache.delete(url); return null; }
+  return entry.data;
+};
+
+const setCache = (url, data) => {
+  const ttl = getCacheTTL(url);
+  cache.set(url, { data, expiry: Date.now() + ttl });
+};
+
+// ═══════════════════════════════════════════════════════
+// GLOBAL RATE LIMITER — 40 req/min (safe margin from 50)
+// ═══════════════════════════════════════════════════════
+const globalRequests = [];
+const MAX_REQUESTS_PER_MINUTE = 40;
+
+const isRateLimited = () => {
   const now = Date.now();
-  const requests = rateLimitMap.get(url) || [];
-  
-  // Remove requests older than 1 minute
-  const validRequests = requests.filter(timestamp => now - timestamp < 60000);
-  
-  // If we have 50+ requests in the last minute, rate limit
-  if (validRequests.length >= 50) {
-    return true;
+  // Remove entries older than 60s
+  while (globalRequests.length > 0 && now - globalRequests[0] > 60000) {
+    globalRequests.shift();
   }
-  
-  // Add current request and update map
-  validRequests.push(now);
-  rateLimitMap.set(url, validRequests);
-  return false;
+  return globalRequests.length >= MAX_REQUESTS_PER_MINUTE;
+};
+
+const trackRequest = () => {
+  globalRequests.push(Date.now());
+};
+
+// ═══════════════════════════════════════════════════════
+// REQUEST QUEUE — serialize requests to avoid burst
+// ═══════════════════════════════════════════════════════
+let requestQueue = Promise.resolve();
+const MIN_DELAY_MS = 200; // min 200ms between requests
+
+const enqueue = (fn) => {
+  requestQueue = requestQueue.then(() =>
+    new Promise((resolve) => setTimeout(resolve, MIN_DELAY_MS))
+  ).then(fn);
+  return requestQueue;
 };
 
 // Debounce function
@@ -108,11 +142,6 @@ export const formatServerData = (data) => {
   }));
 };
 
-// Rate limiting utility
-export const clearRateLimit = (url) => {
-  rateLimitMap.delete(url);
-};
-
 // Cache management
 export const clearCache = () => {
   cache.clear();
@@ -128,86 +157,77 @@ export const clearCachePattern = (pattern) => {
   keys.forEach(key => cache.delete(key));
 };
 
-// Enhanced API fetching with caching and rate limiting
+// Enhanced API fetching with smart cache, global rate limit, and request queue
 const fetchAnime = async (endpoint, provider = 'default') => {
   const url = `${API_BASE_URL}${endpoint}`;
   
-  // Check cache first (skip rate limiting for cached data)
+  // 1. Check cache first — no network needed
   const cachedData = getFromCache(url);
-  if (cachedData) {
-    console.log(`[${provider}] Using cached data for:`, url);
-    return cachedData;
+  if (cachedData) return cachedData;
+
+  // 2. Check global rate limit
+  if (isRateLimited()) {
+    // Wait and retry once instead of throwing immediately
+    await new Promise(r => setTimeout(r, 2000));
+    if (isRateLimited()) {
+      throw new Error('Server sedang sibuk. Tunggu sebentar lalu coba lagi.');
+    }
   }
 
-  // Check rate limiting (only for actual network requests)
-  if (isRateLimited(url)) {
-    throw new Error('Rate limit exceeded. Please wait a moment before trying again.');
-  }
+  // 3. Enqueue request (serialized with min delay)
+  return enqueue(async () => {
+    // Double-check cache (another request might have filled it while queued)
+    const cached2 = getFromCache(url);
+    if (cached2) return cached2;
 
-  try {
-    console.log(`[${provider}] Fetching:`, url);
-    const response = await fetch(url, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      },
-    });
+    trackRequest();
 
-    const contentType = response.headers.get('content-type') || '';
+    try {
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: { 'Accept': 'application/json' },
+      });
 
-    if (!response.ok) {
-      // Try to parse JSON error first
-      let parsed = null;
-      let rawText = null;
+      const contentType = response.headers.get('content-type') || '';
 
-      if (contentType.includes('application/json')) {
-        try {
-          parsed = await response.json();
-        } catch {
-          // ignore JSON parse error, fallback to text below
+      if (!response.ok) {
+        // Rate limited by server — wait and retry once
+        if (response.status === 429) {
+          await new Promise(r => setTimeout(r, 3000));
+          const retry = await fetch(url, { headers: { 'Accept': 'application/json' } });
+          if (retry.ok) {
+            const retryData = await retry.json();
+            setCache(url, retryData);
+            return retryData;
+          }
+          throw new APIError('Server rate limit. Coba lagi dalam beberapa detik.', 429);
         }
+
+        let parsed = null;
+        if (contentType.includes('application/json')) {
+          try { parsed = await response.json(); } catch {}
+        }
+
+        if (response.status === 404) {
+          throw new APIError('Episode atau anime tidak ditemukan', 404);
+        }
+
+        if (parsed && typeof parsed === 'object') return parsed;
+
+        throw new APIError(`Server error: ${response.status}`, response.status);
       }
 
-      if (!parsed) {
-        rawText = await response.text();
+      const data = await response.json();
+      setCache(url, data);
+      return data;
+    } catch (error) {
+      if (error instanceof APIError) throw error;
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        throw new Error('Gagal terhubung ke server. Periksa koneksi internet.');
       }
-
-      // Compress noisy HTML error bodies in logs
-      const logBody = rawText && rawText.trim().startsWith('<')
-        ? '[HTML error body omitted]'
-        : (parsed || rawText);
-
-      console.error(
-        `[${provider}] API Error ${response.status}:`,
-        logBody,
-      );
-
-      // For 404 errors, throw a specific error instead of returning empty data
-      if (response.status === 404) {
-        throw new APIError('Episode atau anime tidak ditemukan', 404);
-      }
-
-      // Return the parsed data or a "not found" object even if HTTP status is error
-      // This allows caller to handle "not found" cases gracefully
-      if (parsed && typeof parsed === 'object') {
-        return parsed;
-      }
-
-      // For non-JSON responses (like HTML error pages), throw error instead of returning empty
-      throw new APIError(`Server error: ${response.status} ${response.statusText}`, response.status);
+      throw error;
     }
-
-    const data = await response.json();
-    setCache(url, data);
-    return data;
-  } catch (error) {
-    console.error(`[${provider}] API fetch error for ${url}:`, error);
-    if (error.name === 'TypeError' && error.message.includes('fetch')) {
-      throw new Error('Network error: Unable to connect to the server. Please check your internet connection.');
-    }
-    throw error;
-  }
+  });
 };
 
 // Provider-specific API endpoints
