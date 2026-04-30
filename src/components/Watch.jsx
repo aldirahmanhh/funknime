@@ -153,16 +153,20 @@ const Watch = () => {
     return () => { cancelled = true; };
   }, [episodeId]);
 
-  // ─── Video.js progress tracking via native ref ───
+  // ─── Video.js progress tracking + error recovery ───
+  const retryCountRef = useRef(0);
+
   useEffect(() => {
     const vid = videoElRef.current;
     if (!vid) return;
+    retryCountRef.current = 0;
 
     const savedTime = getWatchProgress(episodeId);
 
     const onLoaded = () => {
       if (savedTime > 5) vid.currentTime = savedTime;
       setSwitching(false);
+      retryCountRef.current = 0; // reset retry on successful load
     };
     const onPause = () => {
       if (vid.currentTime > 5) updateWatchProgress(episodeId, vid.currentTime, vid.duration);
@@ -178,17 +182,68 @@ const Watch = () => {
       if (vid.currentTime > 5) updateWatchProgress(episodeId, vid.currentTime, vid.duration);
     };
 
+    // Auto-recover from playback errors (FFmpeg demuxer, network stall, etc)
+    const onError = () => {
+      const lastPos = vid.currentTime || 0;
+      console.warn(`[Watch] Video error at ${lastPos}s, retry #${retryCountRef.current + 1}`);
+
+      if (retryCountRef.current < 3) {
+        retryCountRef.current++;
+        // Save position, reload source, seek back
+        if (lastPos > 5) updateWatchProgress(episodeId, lastPos, vid.duration);
+        setTimeout(() => {
+          try {
+            vid.load();
+            vid.addEventListener('loadeddata', () => {
+              vid.currentTime = Math.max(0, lastPos - 2); // seek back 2s for safety
+              vid.play().catch(() => {});
+            }, { once: true });
+          } catch {}
+        }, 1000);
+      } else {
+        // After 3 retries, fallback to iframe
+        console.warn('[Watch] Max retries reached, falling back to iframe');
+        setVideoFailed(true);
+      }
+    };
+
+    // Handle stalled/stuck video (no data for 8s)
+    let stallTimer = null;
+    const onStalled = () => {
+      stallTimer = setTimeout(() => {
+        if (vid.readyState < 3 && !vid.paused) {
+          console.warn('[Watch] Video stalled, attempting recovery');
+          const pos = vid.currentTime;
+          vid.load();
+          vid.addEventListener('loadeddata', () => {
+            vid.currentTime = pos;
+            vid.play().catch(() => {});
+          }, { once: true });
+        }
+      }, 8000);
+    };
+    const onPlaying = () => {
+      if (stallTimer) { clearTimeout(stallTimer); stallTimer = null; }
+    };
+
     vid.addEventListener('loadeddata', onLoaded);
     vid.addEventListener('pause', onPause);
     vid.addEventListener('play', onPlay);
     vid.addEventListener('ended', onEnded);
+    vid.addEventListener('error', onError);
+    vid.addEventListener('stalled', onStalled);
+    vid.addEventListener('playing', onPlaying);
 
     return () => {
       vid.removeEventListener('loadeddata', onLoaded);
       vid.removeEventListener('pause', onPause);
       vid.removeEventListener('play', onPlay);
       vid.removeEventListener('ended', onEnded);
+      vid.removeEventListener('error', onError);
+      vid.removeEventListener('stalled', onStalled);
+      vid.removeEventListener('playing', onPlaying);
       if (saveTimerRef.current) { clearInterval(saveTimerRef.current); saveTimerRef.current = null; }
+      if (stallTimer) clearTimeout(stallTimer);
     };
   }, [videoUrl, episodeId]);
 
